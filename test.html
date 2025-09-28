@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test CSS Loading</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <div style="padding: 20px;">
+        <h1>CSS Loading Test</h1>
+        <p>If you see purple gradient background and styled elements, CSS is working!</p>
+
+        <div class="action-btn update-btn" style="max-width: 200px;">
+            <span>Test Button</span>
+        </div>
+
+        <script>
+            // Check if CSS loaded
+            const testElement = document.querySelector('.action-btn');
+            if (testElement) {
+                const styles = window.getComputedStyle(testElement);
+                const bgColor = styles.backgroundColor;
+                console.log('Background color:', bgColor);
+
+                if (bgColor !== 'rgba(0, 0, 0, 0)') {
+                    document.body.innerHTML += '<p style="color: green; font-weight: bold;">✅ CSS is loaded successfully!</p>';
+                } else {
+                    document.body.innerHTML += '<p style="color: red; font-weight: bold;">❌ CSS failed to load</p>';
+                }
+            }
+        </script>
+    </div>
+</body>
+</html>
