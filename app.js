@@ -1110,6 +1110,54 @@ function loadTodayData() {
     // Display full revenue number
     document.getElementById('todayRevenue').textContent = 'ZAR ' + totalRevenue.toLocaleString();
 
+    // Add motivational message if no sales today
+    if (totalUnits === 0) {
+        const motivationalDiv = document.createElement('div');
+        motivationalDiv.style.cssText = `
+            margin-top: 20px;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            text-align: center;
+            animation: pulse 2s infinite;
+        `;
+        motivationalDiv.innerHTML = `
+            <p style="color: white; font-size: 18px; font-weight: 600; margin: 0;">
+                💪 Try harder for better life! 💪
+            </p>
+            <p style="color: rgba(255,255,255,0.9); font-size: 14px; margin: 8px 0 0 0;">
+                Every sale counts. Keep pushing forward!
+            </p>
+        `;
+
+        // Add animation keyframes if not already added
+        if (!document.querySelector('#motivationAnimation')) {
+            const style = document.createElement('style');
+            style.id = 'motivationAnimation';
+            style.textContent = `
+                @keyframes pulse {
+                    0% { transform: scale(1); }
+                    50% { transform: scale(1.02); }
+                    100% { transform: scale(1); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Find the table container and append the message after it
+        const tableContainer = document.querySelector('#todayView .sales-table-container');
+        if (tableContainer && !document.querySelector('.motivation-message')) {
+            motivationalDiv.className = 'motivation-message';
+            tableContainer.parentNode.insertBefore(motivationalDiv, tableContainer.nextSibling);
+        }
+    } else {
+        // Remove motivational message if sales exist
+        const existingMessage = document.querySelector('.motivation-message');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+    }
+
     // Update table
     const tbody = document.getElementById('todayTableBody');
     tbody.innerHTML = '';
