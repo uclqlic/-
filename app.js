@@ -41,8 +41,8 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// Model list
-const models = [
+// Model list (mutable for adding/removing models)
+let models = [
     "100Q7800H", "86X8700G", "86X8500G", "75X8700G", "75X8500G",
     "75Q6600H", "65X8700G", "65X8500G", "65Q6620G", "60Q6600H",
     "55Q6600H", "43E5520H", "40E5520H", "32E5520H"
@@ -65,8 +65,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeProductAttributes();
     loadData();
     loadProductPrices();
+    updateSalesColumnHeader();
     renderInventoryTable();
-    setDefaultDates();
+    initCustomDatePickers();
+    setDefaultDatesCustom();
+    forceEnglishDateInputs();
 
     // Add test sales data if empty
     if (salesHistory.length === 0) {
@@ -140,6 +143,12 @@ function loadData() {
     const savedInventory = localStorage.getItem('makroInventory');
     const savedSales = localStorage.getItem('makroSales');
     const savedTargets = localStorage.getItem('makroMonthlyTargets');
+    const savedModels = localStorage.getItem('makroModels');
+
+    // Load models first
+    if (savedModels) {
+        models = JSON.parse(savedModels);
+    }
 
     if (savedInventory) {
         inventoryData = { ...inventoryData, ...JSON.parse(savedInventory) };
@@ -159,10 +168,11 @@ function saveData() {
     localStorage.setItem('makroInventory', JSON.stringify(inventoryData));
     localStorage.setItem('makroSales', JSON.stringify(salesHistory));
     localStorage.setItem('makroMonthlyTargets', JSON.stringify(monthlyTargets));
+    localStorage.setItem('makroModels', JSON.stringify(models));
 }
 
 // Calculate safety stock based on customizable days
-// Default: Sum of last 8 days sales (7 days delivery + 1 day buffer)
+// Default: Sum of last 9 days sales
 function calculateSafetyStock() {
     const today = new Date();
     const daysAgo = new Date();
@@ -186,22 +196,61 @@ function calculateSafetyStock() {
     });
 }
 
+// Calculate sales for the safety stock period (default 9 days)
+function calculatePeriodSales(model) {
+    const today = new Date();
+    const periodAgo = new Date();
+    periodAgo.setDate(today.getDate() - safetyStockDays);
+
+    let totalSales = 0;
+
+    salesHistory.forEach(sale => {
+        const saleDate = new Date(sale.date);
+        if (saleDate >= periodAgo && saleDate <= today) {
+            sale.items.forEach(item => {
+                if (item.model === model) {
+                    totalSales += item.quantity;
+                }
+            });
+        }
+    });
+
+    return totalSales;
+}
+
+// Update the Sales column header based on current period
+function updateSalesColumnHeader() {
+    const header = document.getElementById('salesPeriodHeader');
+    if (header) {
+        header.textContent = `Sales (${safetyStockDays}D)`;
+    }
+}
+
 // Render inventory table
 function renderInventoryTable() {
     const tbody = document.getElementById('inventoryTableBody');
     tbody.innerHTML = '';
 
-    // Sort: out of stock and low stock items first
+    // Update the column header
+    updateSalesColumnHeader();
+
+    // Sort: out of stock items first (but not Clean products)
     const sortedModels = [...models].sort((a, b) => {
         const aData = inventoryData[a];
         const bData = inventoryData[b];
 
-        // Out of stock has highest priority
-        if (aData.stock === 0 && bData.stock > 0) return -1;
-        if (aData.stock > 0 && bData.stock === 0) return 1;
+        // Check if products are marked as "Clean"
+        const aIsClean = productAttributes[a] && productAttributes[a].status === 'clean';
+        const bIsClean = productAttributes[b] && productAttributes[b].status === 'clean';
+
+        // Out of stock has highest priority, but only if not Clean
+        const aIsUrgent = aData.stock === 0 && !aIsClean;
+        const bIsUrgent = bData.stock === 0 && !bIsClean;
+
+        if (aIsUrgent && !bIsUrgent) return -1;
+        if (!aIsUrgent && bIsUrgent) return 1;
 
         // All other items are equal priority
-
         return 0;
     });
 
@@ -213,9 +262,15 @@ function renderInventoryTable() {
         let rowClass = '';
         let statusBadge = '';
 
+        // Check if product is marked as "Clean" - if so, don't apply danger styling
+        const isCleanProduct = productAttributes[model] && productAttributes[model].status === 'clean';
+
         if (data.stock === 0) {
-            rowClass = 'danger-row';
-            statusBadge = '<span class="status-badge status-danger">Out of Stock</span>';
+            if (!isCleanProduct) {
+                // Only apply danger row styling if not a clean product
+                rowClass = 'danger-row';
+            }
+            statusBadge = '<span class="status-badge status-danger">OOS</span>';
         } else {
             statusBadge = '<span class="status-badge status-normal">Normal</span>';
         }
@@ -223,6 +278,8 @@ function renderInventoryTable() {
         if (rowClass) {
             row.className = rowClass;
         }
+
+        const periodSales = calculatePeriodSales(model);
 
         row.innerHTML = `
             <td class="model-cell" ${isEditMode ? 'contenteditable="true"' : ''}
@@ -235,6 +292,12 @@ function renderInventoryTable() {
             </td>
             <td class="safety-cell" ${isEditMode ? 'contenteditable="true"' : ''}
                 onblur="updateSafetyStock('${model}', this.textContent)">${data.safetyStock}</td>
+            <td class="sales-period-cell ${isEditMode ? 'editable' : ''}" data-model="${model}">
+                ${isEditMode ?
+                    `<input type="number" class="sales-input" value="${periodSales}" min="0" onchange="updatePeriodSales('${model}', this.value)">` :
+                    periodSales
+                }
+            </td>
             <td>${statusBadge}</td>
             ${isEditMode ? `<td class="action-cell">
                 <button class="delete-row-btn" onclick="deleteRow('${model}')">
@@ -325,6 +388,81 @@ function updateSafetyStock(model, value) {
     renderInventoryTable();
 }
 
+// Update period sales (This actually creates/updates sales record for the period)
+function updatePeriodSales(model, newValue) {
+    const targetSales = parseInt(newValue) || 0;
+
+    // Get today's date
+    const today = new Date().toISOString().split('T')[0];
+
+    // Find or create today's sales record
+    let todaySales = salesHistory.find(sale => sale.date === today);
+
+    if (!todaySales) {
+        todaySales = {
+            date: today,
+            items: []
+        };
+        salesHistory.push(todaySales);
+    }
+
+    // Calculate current period sales to find the difference
+    const currentPeriodSales = calculatePeriodSales(model);
+    const difference = targetSales - currentPeriodSales;
+
+    if (difference !== 0) {
+        // Find or create item for this model in today's sales
+        let item = todaySales.items.find(i => i.model === model);
+
+        if (!item && difference > 0) {
+            // Add new item with the difference
+            todaySales.items.push({
+                model: model,
+                quantity: difference,
+                price: productPrices[model] || 0,
+                time: new Date().toTimeString().slice(0, 5)
+            });
+        } else if (item) {
+            // Adjust existing item quantity
+            item.quantity = Math.max(0, item.quantity + difference);
+
+            // Remove item if quantity becomes 0
+            if (item.quantity === 0) {
+                todaySales.items = todaySales.items.filter(i => i.model !== model);
+            }
+        } else if (difference > 0) {
+            // Create new entry for positive adjustment
+            todaySales.items.push({
+                model: model,
+                quantity: difference,
+                price: productPrices[model] || 0,
+                time: new Date().toTimeString().slice(0, 5)
+            });
+        }
+    }
+
+    // Remove the sales record if it has no items
+    if (todaySales.items.length === 0) {
+        salesHistory = salesHistory.filter(sale => sale.date !== today);
+    }
+
+    // Sort sales history by date
+    salesHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    // Recalculate safety stock since sales changed
+    calculateSafetyStock();
+
+    // Save and refresh
+    saveData();
+    renderInventoryTable();
+
+    // Refresh sales views if on sales page
+    const salesPage = document.getElementById('salesPage');
+    if (salesPage && salesPage.classList.contains('active')) {
+        loadSalesData();
+    }
+}
+
 // Delete row
 function deleteRow(model) {
     if (confirm(`Are you sure you want to delete model ${model}?`)) {
@@ -379,6 +517,12 @@ function showUnifiedForm() {
 
     // Clear any existing items
     document.getElementById('updateItems').innerHTML = '';
+
+    // Ensure custom date pickers are initialized and set to today
+    setTimeout(() => {
+        initCustomDatePickers();
+        setDefaultDatesCustom();
+    }, 100);
 }
 
 
@@ -443,6 +587,12 @@ function switchFormMode(mode) {
             addSalesItem();
         }
     }
+
+    // Ensure custom date pickers are initialized after mode switch
+    setTimeout(() => {
+        initCustomDatePickers();
+        setDefaultDatesCustom();
+    }, 50);
 }
 
 // Add update item
@@ -452,9 +602,10 @@ function addUpdateItem() {
     itemRow.className = 'item-row';
 
     itemRow.innerHTML = `
-        <select class="model-select" onchange="updateStockPlaceholder(this)" required>
+        <select class="model-select" onchange="handleModelSelect(this, 'update')" required>
             <option value="">Select Product Model</option>
             ${models.map(model => `<option value="${model}">${model}</option>`).join('')}
+            <option value="__ADD_NEW__" style="font-weight: 600; color: #8B5CF6;">+ Add New Model</option>
         </select>
         <input type="number" class="quantity-input" placeholder="Stock Qty" min="0" required aria-label="Update quantity">
         <button class="remove-item-btn" onclick="this.parentElement.remove()" aria-label="Remove item">
@@ -465,12 +616,29 @@ function addUpdateItem() {
     container.appendChild(itemRow);
 }
 
+// Handle model selection including 'Add New Model' option
+function handleModelSelect(selectElement, context) {
+    if (selectElement.value === '__ADD_NEW__') {
+        // Store reference to the select element
+        window.currentModelSelect = selectElement;
+        window.currentModelContext = context;
+
+        // Show add model dialog
+        showAddModelDialogFromForm();
+
+        // Reset selection to empty for now
+        selectElement.value = '';
+    } else if (context === 'update') {
+        updateStockPlaceholder(selectElement);
+    }
+}
+
 // Update stock placeholder when model is selected
 function updateStockPlaceholder(selectElement) {
     const model = selectElement.value;
     const quantityInput = selectElement.parentElement.querySelector('.quantity-input');
 
-    if (model) {
+    if (model && model !== '__ADD_NEW__') {
         const currentStock = inventoryData[model]?.stock || 0;
         quantityInput.value = currentStock;
         quantityInput.placeholder = `Current: ${currentStock}`;
@@ -478,6 +646,14 @@ function updateStockPlaceholder(selectElement) {
         quantityInput.value = '';
         quantityInput.placeholder = 'Stock Qty';
     }
+}
+
+// Show add model dialog from form context
+function showAddModelDialogFromForm() {
+    const dialog = document.getElementById('addModelDialog');
+    dialog.classList.add('show');
+    document.getElementById('newModelInput').value = '';
+    document.getElementById('newModelInput').focus();
 }
 
 // Submit stock update from item-based form
@@ -595,9 +771,10 @@ function addSalesItem() {
     itemRow.className = 'item-row';
 
     itemRow.innerHTML = `
-        <select class="model-select" required>
+        <select class="model-select" onchange="handleModelSelect(this, 'sales')" required>
             <option value="">Select Product Model</option>
             ${models.map(model => `<option value="${model}">${model}</option>`).join('')}
+            <option value="__ADD_NEW__" style="font-weight: 600; color: #8B5CF6;">+ Add New Model</option>
         </select>
         <input type="number" class="quantity-input" placeholder="Sales Qty" min="1" required aria-label="Sales quantity">
         <button class="remove-item-btn" onclick="this.parentElement.remove()" aria-label="Remove item">
@@ -692,6 +869,42 @@ function setDefaultDates() {
     }
 }
 
+// Force English locale for all date inputs
+function forceEnglishDateInputs() {
+    // Set English locale for all date inputs
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    dateInputs.forEach(input => {
+        // Set the locale attribute to force English
+        input.setAttribute('lang', 'en-US');
+
+        // For browsers that support it, set the locale directly
+        if (input.showPicker) {
+            // Modern browsers support this
+            input.addEventListener('focus', function() {
+                // Force English locale behavior
+                this.setAttribute('lang', 'en-US');
+            });
+        }
+
+        // Also handle the date picker in the sales page
+        if (input.id === 'selectedDate') {
+            input.setAttribute('lang', 'en-US');
+        }
+    });
+
+    // Additional handling for the date display in sales page
+    const selectedDateDisplay = document.getElementById('selectedDateDisplay');
+    if (selectedDateDisplay) {
+        // Ensure the date display uses English format
+        selectedDateDisplay.addEventListener('click', function() {
+            const datePicker = document.getElementById('selectedDate');
+            if (datePicker) {
+                datePicker.setAttribute('lang', 'en-US');
+            }
+        });
+    }
+}
+
 // Export inventory data to Excel
 function exportToExcel() {
     // Prepare data
@@ -702,7 +915,7 @@ function exportToExcel() {
         const inv = inventoryData[model];
         let status = 'Normal';
         if (inv.stock === 0) {
-            status = 'Out of Stock';
+            status = 'OOS';
         }
 
         data.push([
@@ -777,8 +990,8 @@ function saveProductPrices() {
 // Product attributes (stored in localStorage)
 let productAttributes = {};
 
-// Safety stock calculation days (default is 8 days)
-let safetyStockDays = 8;
+// Safety stock calculation days (default is 9 days)
+let safetyStockDays = 9;
 
 // Initialize product attributes
 function initializeProductAttributes() {
@@ -809,7 +1022,7 @@ function initializeProductAttributes() {
     // Load safety stock calculation days setting
     const savedSafetyStockDays = localStorage.getItem('makroSafetyStockDays');
     if (savedSafetyStockDays) {
-        safetyStockDays = parseInt(savedSafetyStockDays) || 8;
+        safetyStockDays = parseInt(savedSafetyStockDays) || 9;
     }
 }
 
@@ -934,7 +1147,16 @@ function openSalesFormFromAnalytics() {
     // Pre-populate with selected date if in Today view
     if (isToday) {
         const selectedDateStr = selectedSalesDate.toISOString().split('T')[0];
-        document.getElementById('salesDate').value = selectedDateStr;
+        const salesDateInput = document.getElementById('salesDate');
+        if (salesDateInput) {
+            salesDateInput.value = selectedDateStr;
+        }
+
+        // Update custom date picker if it exists
+        if (datePickers.salesDate) {
+            datePickers.salesDate.setDate(selectedSalesDate);
+        }
+
         // Set current time
         const now = new Date();
         const currentTime = now.toTimeString().slice(0, 5);
@@ -1007,6 +1229,8 @@ function navigateDate(direction) {
 // Handle date picker change
 function onDateChange() {
     const datePicker = document.getElementById('selectedDate');
+    if (!datePicker.value) return;
+
     const newDate = new Date(datePicker.value + 'T12:00:00'); // Set to noon to avoid timezone issues
 
     // Don't allow future dates
@@ -1028,15 +1252,21 @@ function onDateChange() {
 
 // Open date picker when clicking on display
 function openDatePicker() {
-    const datePicker = document.getElementById('selectedDate');
-    if (datePicker) {
-        // Try modern showPicker method first
-        if (datePicker.showPicker) {
-            datePicker.showPicker();
-        } else {
-            // Fallback for older browsers
-            datePicker.focus();
-            datePicker.click();
+    // Use custom date picker if available
+    if (datePickers.selectedDate) {
+        datePickers.selectedDate.toggle();
+    } else {
+        // Fallback to native date picker
+        const datePicker = document.getElementById('selectedDate');
+        if (datePicker) {
+            // Try modern showPicker method first
+            if (datePicker.showPicker) {
+                datePicker.showPicker();
+            } else {
+                // Fallback for older browsers
+                datePicker.focus();
+                datePicker.click();
+            }
         }
     }
 }
@@ -1056,6 +1286,13 @@ function updateDateDisplay() {
         // Set max date to today
         const today = new Date().toISOString().split('T')[0];
         datePicker.max = today;
+        // Ensure English locale
+        datePicker.setAttribute('lang', 'en-US');
+    }
+
+    // Update custom date picker if it exists
+    if (datePickers.selectedDate) {
+        datePickers.selectedDate.setDate(selectedSalesDate);
     }
 }
 
@@ -1546,85 +1783,122 @@ document.addEventListener('keydown', function(e) {
 
 // Load Personal Page
 function loadPersonalPage() {
-    const grid = document.querySelector('.products-grid');
-    if (!grid) return;
+    // Initialize date query section
+    initializeDateQuery();
 
-    grid.innerHTML = '';
+    // Populate product table
+    const productTableBody = document.getElementById('productTableBody');
+    if (productTableBody) {
+        // Clear table
+        productTableBody.innerHTML = '';
 
-    models.forEach(model => {
-        const attrs = productAttributes[model] || { status: 'usual', category: 'non-push' };
+        // Add rows for each model
+        models.forEach(model => {
+            const attrs = productAttributes[model] || { status: 'usual', category: 'non-push' };
 
-        const productItem = document.createElement('div');
-        productItem.className = 'product-item';
-        productItem.innerHTML = `
-            <div class="product-model">${model}</div>
-            <div class="product-attributes">
-                <div class="attribute-row">
-                    <span class="attribute-label">Status</span>
-                    <div class="toggle-with-labels">
-                        <span class="toggle-label-left ${attrs.status === 'usual' ? 'active' : ''}">Usual</span>
-                        <label class="attribute-toggle">
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td style="font-weight: 500;">${model}</td>
+                <td>
+                    <div style="display: flex; align-items: center;">
+                        <span class="toggle-label">${attrs.status === 'usual' ? 'Usual' : 'Clean'}</span>
+                        <label class="table-toggle">
                             <input type="checkbox"
-                                   data-model="${model}"
-                                   data-attribute="status"
                                    ${attrs.status === 'clean' ? 'checked' : ''}
-                                   onchange="toggleProductAttribute(this)">
-                            <span class="toggle-slider"></span>
+                                   onchange="updateTableAttribute('${model}', 'status', this.checked)">
+                            <span class="table-toggle-slider"></span>
                         </label>
-                        <span class="toggle-label-right ${attrs.status === 'clean' ? 'active' : ''}">Clean</span>
                     </div>
-                </div>
-                <div class="attribute-row">
-                    <span class="attribute-label">Category</span>
-                    <div class="toggle-with-labels">
-                        <span class="toggle-label-left ${attrs.category === 'non-push' ? 'active' : ''}">Non-Push</span>
-                        <label class="attribute-toggle">
+                </td>
+                <td>
+                    <div style="display: flex; align-items: center;">
+                        <span class="toggle-label">${attrs.category === 'non-push' ? 'Non-Push' : 'Push'}</span>
+                        <label class="table-toggle">
                             <input type="checkbox"
-                                   data-model="${model}"
-                                   data-attribute="category"
                                    ${attrs.category === 'push' ? 'checked' : ''}
-                                   onchange="toggleProductAttribute(this)">
-                            <span class="toggle-slider"></span>
+                                   onchange="updateTableAttribute('${model}', 'category', this.checked)">
+                            <span class="table-toggle-slider"></span>
                         </label>
-                        <span class="toggle-label-right ${attrs.category === 'push' ? 'active' : ''}">Push</span>
                     </div>
-                </div>
-            </div>
+                </td>
+                <td>
+                    <button class="delete-model-btn" onclick="deleteModel('${model}')" title="Delete model">
+                        <span class="material-icons">delete</span>
+                    </button>
+                </td>
+            `;
+
+            productTableBody.appendChild(row);
+        });
+    }
+
+    // Populate price table
+    loadPriceTable();
+}
+
+// Load price table
+function loadPriceTable() {
+    const priceTableBody = document.getElementById('priceTableBody');
+    if (!priceTableBody) return;
+
+    // Clear table
+    priceTableBody.innerHTML = '';
+
+    // Add rows for each model
+    models.forEach(model => {
+        const price = productPrices[model] || 0;
+        const hasPrice = price > 0;
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td style="font-weight: 500;">${model}</td>
+            <td>
+                <input type="number"
+                       class="price-input-field"
+                       value="${price}"
+                       min="0"
+                       step="100"
+                       data-model="${model}"
+                       data-original="${price}"
+                       onchange="onPriceChange(this)"
+                       oninput="onPriceInput(this)">
+            </td>
+            <td>
+                ${hasPrice ?
+                    `<button class="delete-model-btn" onclick="clearPrice('${model}')" title="Clear price">
+                        <span class="material-icons">delete</span>
+                    </button>` :
+                    `<span class="price-status not-set">Not Set</span>`
+                }
+            </td>
         `;
 
-        grid.appendChild(productItem);
+        priceTableBody.appendChild(row);
     });
 }
 
-// Toggle product attribute
-function toggleProductAttribute(input) {
-    const model = input.dataset.model;
-    const attribute = input.dataset.attribute;
-
+// Update product attribute from table
+function updateTableAttribute(model, attribute, checked) {
     if (!productAttributes[model]) {
         productAttributes[model] = { status: 'usual', category: 'non-push' };
     }
 
-    // Update attribute value
     if (attribute === 'status') {
-        productAttributes[model].status = input.checked ? 'clean' : 'usual';
-        // Update label active states
-        const row = input.closest('.attribute-row');
-        if (row) {
-            const leftLabel = row.querySelector('.toggle-label-left');
-            const rightLabel = row.querySelector('.toggle-label-right');
-            if (leftLabel) leftLabel.classList.toggle('active', !input.checked);
-            if (rightLabel) rightLabel.classList.toggle('active', input.checked);
-        }
+        productAttributes[model].status = checked ? 'clean' : 'usual';
     } else if (attribute === 'category') {
-        productAttributes[model].category = input.checked ? 'push' : 'non-push';
-        // Update label active states
-        const row = input.closest('.attribute-row');
-        if (row) {
-            const leftLabel = row.querySelector('.toggle-label-left');
-            const rightLabel = row.querySelector('.toggle-label-right');
-            if (leftLabel) leftLabel.classList.toggle('active', !input.checked);
-            if (rightLabel) rightLabel.classList.toggle('active', input.checked);
+        productAttributes[model].category = checked ? 'push' : 'non-push';
+    }
+
+    // Update the label text in the table
+    const row = event.target.closest('tr');
+    if (row) {
+        const labelSpan = event.target.closest('div').querySelector('.toggle-label');
+        if (labelSpan) {
+            if (attribute === 'status') {
+                labelSpan.textContent = checked ? 'Clean' : 'Usual';
+            } else if (attribute === 'category') {
+                labelSpan.textContent = checked ? 'Push' : 'Non-Push';
+            }
         }
     }
 
@@ -1632,13 +1906,260 @@ function toggleProductAttribute(input) {
 
     // Update structure products if category changed
     if (attribute === 'category') {
-        // Recalculate month data with new structure products
         loadMonthData();
     }
 }
 
-// Edit prices function (placeholder)
+// Delete model from table
+function deleteModel(model) {
+    if (!confirm(`Are you sure you want to delete model ${model}? This will remove all inventory and sales data for this model.`)) {
+        return;
+    }
+
+    // Remove from models array
+    const index = models.indexOf(model);
+    if (index > -1) {
+        models.splice(index, 1);
+    }
+
+    // Remove inventory data
+    delete inventoryData[model];
+
+    // Remove product attributes
+    delete productAttributes[model];
+
+    // Remove price
+    delete productPrices[model];
+
+    // Remove sales history for this model
+    salesHistory = salesHistory.filter(sale => sale.model !== model);
+
+    // Save all data
+    saveData();
+    saveProductAttributes();
+    saveProductPrices();
+
+    // Reload pages
+    loadPersonalPage();
+    loadPriceTable();  // Also reload price table
+    renderInventoryTable();
+    if (currentTab) {
+        showSalesView(currentTab);
+    }
+
+    showAlert(`Model ${model} deleted successfully`, 'Success', 'check_circle');
+}
+
+// Show add model dialog
+function showAddModelDialog() {
+    const dialog = document.getElementById('addModelDialog');
+    dialog.classList.add('show');
+    document.getElementById('newModelInput').value = '';
+    document.getElementById('newModelInput').focus();
+}
+
+// Close add model dialog
+function closeAddModelDialog() {
+    const dialog = document.getElementById('addModelDialog');
+    dialog.classList.remove('show');
+}
+
+// Add new model
+function addNewModel() {
+    const input = document.getElementById('newModelInput');
+    const newModel = input.value.trim().toUpperCase();
+
+    if (!newModel) {
+        showAlert('Please enter a model name', 'Error', 'error');
+        return;
+    }
+
+    // Check if model already exists
+    if (models.includes(newModel)) {
+        showAlert('This model already exists', 'Error', 'error');
+        return;
+    }
+
+    // Add to models array
+    models.push(newModel);
+    models.sort();
+
+    // Initialize inventory data for new model
+    if (!inventoryData[newModel]) {
+        inventoryData[newModel] = {
+            stock: 0,
+            safetyStock: 0
+        };
+    }
+
+    // Initialize product attributes
+    if (!productAttributes[newModel]) {
+        productAttributes[newModel] = {
+            status: 'usual',
+            category: 'non-push'
+        };
+    }
+
+    // Initialize price
+    if (!productPrices[newModel]) {
+        productPrices[newModel] = 0;
+    }
+
+    // Save all data
+    saveData();
+    saveProductAttributes();
+    saveProductPrices();
+
+    // Update the form select if called from form context
+    if (window.currentModelSelect) {
+        // Refresh ALL select dropdowns in the forms
+        const allSelects = document.querySelectorAll('.model-select');
+        allSelects.forEach(select => {
+            const currentValue = select.value;
+
+            // Rebuild options for each select
+            select.innerHTML = `
+                <option value="">Select Product Model</option>
+                ${models.map(model => `<option value="${model}">${model}</option>`).join('')}
+                <option value="__ADD_NEW__" style="font-weight: 600; color: #8B5CF6;">+ Add New Model</option>
+            `;
+
+            // Restore previous value if it wasn't the add new option
+            if (currentValue && currentValue !== '__ADD_NEW__') {
+                select.value = currentValue;
+            } else if (select === window.currentModelSelect) {
+                // Select the newly added model for the dropdown that initiated the add
+                select.value = newModel;
+            }
+        });
+
+        // Trigger change event if needed for the initiating select
+        if (window.currentModelContext === 'update' && window.currentModelSelect) {
+            updateStockPlaceholder(window.currentModelSelect);
+        }
+
+        // Clear the reference
+        window.currentModelSelect = null;
+        window.currentModelContext = null;
+    } else {
+        // Called from Personal page - reload both tables
+        loadPersonalPage();
+        // Specifically reload price table to show new model
+        loadPriceTable();
+    }
+
+    // Update inventory table if visible
+    renderInventoryTable();
+
+    // Close dialog
+    closeAddModelDialog();
+
+    // Show success message
+    showAlert(`Model ${newModel} added successfully`, 'Success', 'check_circle');
+}
+
+
+// Handle price input changes
+function onPriceInput(input) {
+    const originalValue = input.dataset.original;
+    if (input.value !== originalValue) {
+        input.classList.add('modified');
+        document.querySelector('.save-prices-btn').style.display = 'flex';
+    } else {
+        input.classList.remove('modified');
+
+        // Check if any other prices are modified
+        const anyModified = document.querySelectorAll('.price-input-field.modified').length > 0;
+        if (!anyModified) {
+            document.querySelector('.save-prices-btn').style.display = 'none';
+        }
+    }
+}
+
+// Handle price change (when user finishes editing)
+function onPriceChange(input) {
+    const model = input.dataset.model;
+    const price = parseFloat(input.value) || 0;
+
+    // Update status column
+    const row = input.closest('tr');
+    const statusCell = row.cells[2];
+
+    if (price > 0) {
+        statusCell.innerHTML = `
+            <button class="delete-model-btn" onclick="clearPrice('${model}')" title="Clear price">
+                <span class="material-icons">delete</span>
+            </button>
+        `;
+    } else {
+        statusCell.innerHTML = `<span class="price-status not-set">Not Set</span>`;
+    }
+}
+
+// Clear price for a model
+function clearPrice(model) {
+    // Set price to 0
+    productPrices[model] = 0;
+
+    // Find the row and update input
+    const priceInputs = document.querySelectorAll('.price-input-field');
+    priceInputs.forEach(input => {
+        if (input.dataset.model === model) {
+            input.value = 0;
+            input.dataset.original = 0;
+
+            // Update status cell
+            const row = input.closest('tr');
+            const statusCell = row.cells[2];
+            statusCell.innerHTML = `<span class="price-status not-set">Not Set</span>`;
+        }
+    });
+
+    // Save changes
+    saveProductPrices();
+
+    // Show feedback
+    showAlert(`Price cleared for ${model}`, 'Success', 'check_circle');
+}
+
+// Save price changes
+function savePriceChanges() {
+    const modifiedInputs = document.querySelectorAll('.price-input-field.modified');
+
+    modifiedInputs.forEach(input => {
+        const model = input.dataset.model;
+        const price = parseFloat(input.value) || 0;
+
+        productPrices[model] = price;
+
+        // Update original value
+        input.dataset.original = price;
+        input.classList.remove('modified');
+    });
+
+    // Save to localStorage
+    saveProductPrices();
+
+    // Hide save button
+    document.querySelector('.save-prices-btn').style.display = 'none';
+
+    // Show success message
+    showAlert('Prices updated successfully!', 'Success', 'check_circle');
+
+    // Update month data if needed
+    if (currentTab === 'month') {
+        loadMonthData();
+    }
+}
+
+// This function is now replaced by the table version above
 function editPrices() {
+    // Deprecated - now using inline table editing
+    return;
+}
+
+// Old modal-based price editing (deprecated)
+function editPricesOld() {
     // Create a modal for editing prices
     const modal = document.createElement('div');
     modal.className = 'alert-overlay show';
@@ -1745,70 +2266,64 @@ function editSafetyStock() {
     modal.className = 'alert-overlay show';
     modal.style.zIndex = '10000';
 
+    const isDefault = safetyStockDays === 9;
+
     const dialogContent = `
-        <div class="targets-dialog" style="max-width: 450px;">
-            <div class="targets-dialog-header">
-                <div class="targets-dialog-icon">
-                    <span class="material-icons">warning</span>
-                </div>
-                <h3 class="targets-dialog-title">Safety Stock Settings</h3>
-                <p class="targets-dialog-subtitle">Configure safety stock calculation period</p>
+        <div class="alert-dialog" style="max-width: 400px;">
+            <div class="alert-icon">
+                <span class="material-icons">warning</span>
             </div>
 
-            <div class="targets-dialog-content">
-                <div style="margin-bottom: 24px; padding: 14px; background: #F0F9FF; border-radius: 8px; border: 1px solid #BAE6FD;">
-                    <p style="font-size: 13px; color: #075985; margin: 0 0 8px 0; font-weight: 600;">
-                        Current Calculation Method:
-                    </p>
-                    <p style="font-size: 12px; color: #0C4A6E; margin: 0; line-height: 1.5;">
-                        Safety Stock = Sum of last <strong>${safetyStockDays} days</strong> sales<br>
-                        <span style="font-size: 11px; color: #64748B;">
-                            Default: 8 days (7-day delivery time + 1-day buffer)
-                        </span>
-                    </p>
-                </div>
+            <div class="alert-content">
+                <h3 class="alert-title">Safety Stock Settings</h3>
+                <p class="alert-message" style="margin-bottom: 20px;">Configure calculation period for safety stock and sales data</p>
 
-                <div class="targets-input-group">
-                    <div class="targets-input-container">
-                        <span class="material-icons targets-input-icon">schedule</span>
-                        <div class="targets-input-wrapper">
-                            <label for="safety-stock-days" class="targets-input-label">
-                                Calculation Period (Days)
-                            </label>
-                            <div class="targets-input-field">
-                                <input type="number"
-                                       id="safety-stock-days"
-                                       class="targets-input"
-                                       value="${safetyStockDays}"
-                                       min="1"
-                                       max="30"
-                                       step="1">
-                                <span class="units-suffix">days</span>
-                            </div>
-                            <span class="targets-input-hint">
-                                Enter number of past days to calculate safety stock (1-30 days)
-                            </span>
+                <!-- Option Selection -->
+                <div style="margin-bottom: 16px;">
+                    <!-- Default Option -->
+                    <label style="display: flex; align-items: center; padding: 12px; background: ${isDefault ? '#F3F0FF' : 'transparent'}; border: 2px solid ${isDefault ? '#8B5CF6' : '#E5E7EB'}; border-radius: 8px; margin-bottom: 8px; cursor: pointer;">
+                        <input type="radio"
+                               name="safety-stock-mode"
+                               value="default"
+                               ${isDefault ? 'checked' : ''}
+                               onchange="toggleSafetyStockMode('default')"
+                               style="margin-right: 10px;">
+                        <div>
+                            <div style="font-weight: 500; color: #1F2937;">Default (9 days)</div>
                         </div>
-                    </div>
+                    </label>
+
+                    <!-- Custom Option -->
+                    <label style="display: flex; align-items: center; padding: 12px; background: ${!isDefault ? '#F3F0FF' : 'transparent'}; border: 2px solid ${!isDefault ? '#8B5CF6' : '#E5E7EB'}; border-radius: 8px; cursor: pointer;">
+                        <input type="radio"
+                               name="safety-stock-mode"
+                               value="custom"
+                               ${!isDefault ? 'checked' : ''}
+                               onchange="toggleSafetyStockMode('custom')"
+                               style="margin-right: 10px;">
+                        <div>
+                            <div style="font-weight: 500; color: #1F2937;">Custom</div>
+                        </div>
+                    </label>
                 </div>
 
-                <div style="margin-top: 20px; padding: 12px; background: #FEF3C7; border-radius: 8px; border: 1px solid #FCD34D;">
-                    <p style="font-size: 11px; color: #B45309; margin: 0; line-height: 1.5;">
-                        <strong>Note:</strong> This setting will apply to all products.
-                        The safety stock for each product will be recalculated based on the selected number of days.
-                    </p>
+                <!-- Custom Days Input -->
+                <div id="customDaysInput" style="display: ${!isDefault ? 'block' : 'none'}; margin-top: 12px;">
+                    <input type="number"
+                           id="safety-stock-days"
+                           class="form-input"
+                           value="${!isDefault ? safetyStockDays : ''}"
+                           placeholder="Enter days (1-30)"
+                           min="1"
+                           max="30"
+                           step="1"
+                           style="width: 100%; padding: 10px; border: 1px solid #E5E7EB; border-radius: 8px; font-size: 14px;">
                 </div>
             </div>
 
-            <div class="targets-dialog-actions">
-                <button class="targets-button secondary" onclick="closeSafetyStockModal()">
-                    <span class="material-icons">close</span>
-                    <span>Cancel</span>
-                </button>
-                <button class="targets-button primary" onclick="saveSafetyStockDays()">
-                    <span class="material-icons">check</span>
-                    <span>Save Settings</span>
-                </button>
+            <div class="alert-actions">
+                <button class="alert-button secondary" onclick="closeSafetyStockModal()">Cancel</button>
+                <button class="alert-button primary" onclick="saveSafetyStockDays()">Save</button>
             </div>
         </div>
     `;
@@ -1816,6 +2331,47 @@ function editSafetyStock() {
     modal.innerHTML = dialogContent;
     modal.id = 'safetyStockModal';
     document.body.appendChild(modal);
+}
+
+// Toggle between default and custom safety stock modes
+function toggleSafetyStockMode(mode) {
+    const customInput = document.getElementById('customDaysInput');
+    const daysInput = document.getElementById('safety-stock-days');
+    const radios = document.querySelectorAll('input[name="safety-stock-mode"]');
+
+    if (mode === 'default') {
+        customInput.style.display = 'none';
+        if (daysInput) {
+            daysInput.value = '';
+        }
+        // Update visual selection
+        radios.forEach(radio => {
+            const label = radio.closest('label');
+            if (radio.value === 'default') {
+                label.style.background = '#F3F0FF';
+                label.style.borderColor = '#8B5CF6';
+            } else {
+                label.style.background = 'transparent';
+                label.style.borderColor = '#E5E7EB';
+            }
+        });
+    } else {
+        customInput.style.display = 'block';
+        if (daysInput && safetyStockDays !== 9) {
+            daysInput.value = safetyStockDays;
+        }
+        // Update visual selection
+        radios.forEach(radio => {
+            const label = radio.closest('label');
+            if (radio.value === 'custom') {
+                label.style.background = '#F3F0FF';
+                label.style.borderColor = '#8B5CF6';
+            } else {
+                label.style.background = 'transparent';
+                label.style.borderColor = '#E5E7EB';
+            }
+        });
+    }
 }
 
 function closeSafetyStockModal() {
@@ -1827,8 +2383,20 @@ function closeSafetyStockModal() {
 }
 
 function saveSafetyStockDays() {
-    const daysInput = document.getElementById('safety-stock-days');
-    const newDays = parseInt(daysInput.value) || 8;
+    const selectedMode = document.querySelector('input[name="safety-stock-mode"]:checked')?.value;
+    let newDays;
+
+    if (selectedMode === 'default') {
+        newDays = 9;
+    } else {
+        const daysInput = document.getElementById('safety-stock-days');
+        newDays = parseInt(daysInput.value);
+
+        if (!newDays || newDays < 1 || newDays > 30) {
+            showAlert('Please enter a valid number of days (1-30)', 'Invalid Input', 'warning');
+            return;
+        }
+    }
 
     // Validate input range
     if (newDays < 1 || newDays > 30) {
@@ -1845,11 +2413,569 @@ function saveSafetyStockDays() {
         // Recalculate safety stock with new days
         calculateSafetyStock();
 
-        // Update inventory table
+        // Update column header and inventory table
+        updateSalesColumnHeader();
         renderInventoryTable();
 
-        showAlert(`Safety stock now calculated based on ${newDays} days of sales`, 'Settings Updated', 'check_circle');
+        showAlert(`Safety stock and sales period now set to ${newDays} days`, 'Settings Updated', 'check_circle');
     }
 
     closeSafetyStockModal();
 }
+
+// Custom Date Picker Implementation
+class CustomDatePicker {
+    constructor(element, options = {}) {
+        this.element = element;
+        this.options = {
+            maxDate: options.maxDate || new Date(),
+            minDate: options.minDate || null,
+            defaultDate: options.defaultDate || new Date(),
+            onSelect: options.onSelect || (() => {}),
+            placeholder: options.placeholder || 'Select date',
+            ...options
+        };
+
+        this.selectedDate = null;
+        this.viewDate = new Date();
+        this.isOpen = false;
+
+        this.monthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+
+        this.dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        this.init();
+    }
+
+    init() {
+        this.render();
+        this.bindEvents();
+        this.setDate(this.options.defaultDate);
+    }
+
+    render() {
+        const picker = document.createElement('div');
+        picker.className = 'custom-date-picker';
+        picker.innerHTML = `
+            <div class="date-picker-input" tabindex="0">
+                <span class="date-text">${this.options.placeholder}</span>
+                <span class="material-icons calendar-icon">event</span>
+            </div>
+            <div class="date-picker-dropdown">
+                <div class="date-picker-header">
+                    <button class="date-picker-nav" data-action="prev-month">
+                        <span class="material-icons">chevron_left</span>
+                    </button>
+                    <h3 class="date-picker-title"></h3>
+                    <button class="date-picker-nav" data-action="next-month">
+                        <span class="material-icons">chevron_right</span>
+                    </button>
+                </div>
+                <div class="date-picker-calendar">
+                    <div class="date-picker-weekdays"></div>
+                    <div class="date-picker-days"></div>
+                </div>
+                <div class="date-picker-actions">
+                    <button class="date-picker-btn" data-action="today">Today</button>
+                    <button class="date-picker-btn" data-action="clear">Clear</button>
+                </div>
+            </div>
+        `;
+
+        this.element.appendChild(picker);
+
+        // Store references to elements
+        this.pickerElement = picker;
+        this.inputElement = picker.querySelector('.date-picker-input');
+        this.dropdownElement = picker.querySelector('.date-picker-dropdown');
+        this.titleElement = picker.querySelector('.date-picker-title');
+        this.weekdaysElement = picker.querySelector('.date-picker-weekdays');
+        this.daysElement = picker.querySelector('.date-picker-days');
+        this.dateTextElement = picker.querySelector('.date-text');
+
+        this.renderWeekdays();
+        this.renderCalendar();
+    }
+
+    bindEvents() {
+        // Input click to toggle dropdown
+        this.inputElement.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggle();
+        });
+
+        // Keyboard support for input
+        this.inputElement.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.toggle();
+            }
+        });
+
+        // Navigation buttons
+        this.dropdownElement.addEventListener('click', (e) => {
+            const action = e.target.closest('[data-action]')?.dataset.action;
+            if (!action) return;
+
+            e.stopPropagation();
+
+            switch (action) {
+                case 'prev-month':
+                    this.navigateMonth(-1);
+                    break;
+                case 'next-month':
+                    this.navigateMonth(1);
+                    break;
+                case 'today':
+                    this.selectToday();
+                    break;
+                case 'clear':
+                    this.clear();
+                    break;
+            }
+        });
+
+        // Day selection
+        this.daysElement.addEventListener('click', (e) => {
+            if (e.target.classList.contains('date-picker-day') &&
+                !e.target.classList.contains('disabled') &&
+                !e.target.classList.contains('other-month')) {
+
+                const day = parseInt(e.target.textContent);
+                const newDate = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth(), day);
+                this.selectDate(newDate);
+            }
+        });
+
+        // Close on outside click
+        document.addEventListener('click', (e) => {
+            if (!this.pickerElement.contains(e.target)) {
+                this.close();
+            }
+        });
+
+        // Close on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isOpen) {
+                this.close();
+            }
+        });
+    }
+
+    renderWeekdays() {
+        this.weekdaysElement.innerHTML = this.dayNames
+            .map(day => `<div class="date-picker-weekday">${day}</div>`)
+            .join('');
+    }
+
+    renderCalendar() {
+        const year = this.viewDate.getFullYear();
+        const month = this.viewDate.getMonth();
+
+        // Update title
+        this.titleElement.textContent = `${this.monthNames[month]} ${year}`;
+
+        // Get first day of month and number of days
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const daysInMonth = lastDay.getDate();
+        const startingDayOfWeek = firstDay.getDay();
+
+        // Get previous month days to show
+        const prevMonth = new Date(year, month - 1, 0);
+        const daysInPrevMonth = prevMonth.getDate();
+
+        const today = new Date();
+        const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+        const todayDate = today.getDate();
+
+        let daysHTML = '';
+
+        // Previous month days
+        for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+            const day = daysInPrevMonth - i;
+            daysHTML += `<button class="date-picker-day other-month">${day}</button>`;
+        }
+
+        // Current month days
+        for (let day = 1; day <= daysInMonth; day++) {
+            const currentDate = new Date(year, month, day);
+            const classes = ['date-picker-day'];
+
+            // Check if disabled (future date or before min date)
+            if (this.isDateDisabled(currentDate)) {
+                classes.push('disabled');
+            }
+
+            // Check if today
+            if (isCurrentMonth && day === todayDate) {
+                classes.push('today');
+            }
+
+            // Check if selected
+            if (this.selectedDate &&
+                this.selectedDate.getFullYear() === year &&
+                this.selectedDate.getMonth() === month &&
+                this.selectedDate.getDate() === day) {
+                classes.push('selected');
+            }
+
+            daysHTML += `<button class="date-picker-day ${classes.join(' ')}">${day}</button>`;
+        }
+
+        // Next month days to fill the grid
+        const totalCells = Math.ceil((startingDayOfWeek + daysInMonth) / 7) * 7;
+        const remainingCells = totalCells - (startingDayOfWeek + daysInMonth);
+
+        for (let day = 1; day <= remainingCells; day++) {
+            daysHTML += `<button class="date-picker-day other-month">${day}</button>`;
+        }
+
+        this.daysElement.innerHTML = daysHTML;
+    }
+
+    isDateDisabled(date) {
+        // Disable future dates if maxDate is set
+        if (this.options.maxDate && date > this.options.maxDate) {
+            return true;
+        }
+
+        // Disable dates before minDate if set
+        if (this.options.minDate && date < this.options.minDate) {
+            return true;
+        }
+
+        return false;
+    }
+
+    navigateMonth(direction) {
+        this.viewDate.setMonth(this.viewDate.getMonth() + direction);
+        this.renderCalendar();
+    }
+
+    selectDate(date) {
+        if (this.isDateDisabled(date)) return;
+
+        this.selectedDate = new Date(date);
+        this.updateDisplay();
+        this.renderCalendar();
+        this.close();
+
+        // Trigger callback
+        this.options.onSelect(this.selectedDate);
+    }
+
+    selectToday() {
+        const today = new Date();
+        if (!this.isDateDisabled(today)) {
+            this.selectDate(today);
+        }
+    }
+
+    clear() {
+        this.selectedDate = null;
+        this.updateDisplay();
+        this.renderCalendar();
+        this.close();
+
+        // Trigger callback with null
+        this.options.onSelect(null);
+    }
+
+    setDate(date) {
+        if (date) {
+            this.selectedDate = new Date(date);
+            this.viewDate = new Date(date);
+        } else {
+            this.selectedDate = null;
+            this.viewDate = new Date();
+        }
+
+        this.updateDisplay();
+        this.renderCalendar();
+    }
+
+    updateDisplay() {
+        if (this.selectedDate) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            this.dateTextElement.textContent = this.selectedDate.toLocaleDateString('en-US', options);
+        } else {
+            this.dateTextElement.textContent = this.options.placeholder;
+        }
+    }
+
+    toggle() {
+        if (this.isOpen) {
+            this.close();
+        } else {
+            this.open();
+        }
+    }
+
+    open() {
+        this.isOpen = true;
+        this.dropdownElement.classList.add('open');
+
+        // On mobile, also show overlay
+        if (window.innerWidth <= 480) {
+            const overlay = document.createElement('div');
+            overlay.className = 'date-picker-overlay open';
+            overlay.addEventListener('click', () => this.close());
+            document.body.appendChild(overlay);
+            this.overlay = overlay;
+        }
+    }
+
+    close() {
+        this.isOpen = false;
+        this.dropdownElement.classList.remove('open');
+
+        // Remove mobile overlay
+        if (this.overlay) {
+            this.overlay.remove();
+            this.overlay = null;
+        }
+    }
+
+    getValue() {
+        return this.selectedDate ? this.selectedDate.toISOString().split('T')[0] : '';
+    }
+
+    destroy() {
+        if (this.overlay) {
+            this.overlay.remove();
+        }
+        this.pickerElement.remove();
+    }
+}
+
+// Global date picker instances
+const datePickers = {};
+
+// Initialize custom date pickers
+function initCustomDatePickers() {
+    // Wait for DOM to be ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCustomDatePickers);
+        return;
+    }
+
+    const today = new Date();
+
+    // Initialize update date picker
+    const updateDateContainer = document.getElementById('updateDate');
+    if (updateDateContainer && updateDateContainer.type === 'date' && !datePickers.updateDate) {
+        const parent = updateDateContainer.parentElement;
+        const wrapper = document.createElement('div');
+        parent.insertBefore(wrapper, updateDateContainer);
+        updateDateContainer.style.display = 'none';
+
+        datePickers.updateDate = new CustomDatePicker(wrapper, {
+            maxDate: today,
+            defaultDate: today,
+            placeholder: 'Select update date',
+            onSelect: (date) => {
+                updateDateContainer.value = date ? date.toISOString().split('T')[0] : '';
+            }
+        });
+    }
+
+    // Initialize sales date picker
+    const salesDateContainer = document.getElementById('salesDate');
+    if (salesDateContainer && salesDateContainer.type === 'date' && !datePickers.salesDate) {
+        const parent = salesDateContainer.parentElement;
+        const wrapper = document.createElement('div');
+        parent.insertBefore(wrapper, salesDateContainer);
+        salesDateContainer.style.display = 'none';
+
+        datePickers.salesDate = new CustomDatePicker(wrapper, {
+            maxDate: today,
+            defaultDate: today,
+            placeholder: 'Select sales date',
+            onSelect: (date) => {
+                salesDateContainer.value = date ? date.toISOString().split('T')[0] : '';
+            }
+        });
+    }
+
+    // Initialize selected date picker (for sales analytics)
+    const selectedDateContainer = document.getElementById('selectedDate');
+    if (selectedDateContainer && selectedDateContainer.type === 'date' && !datePickers.selectedDate) {
+        const parent = selectedDateContainer.parentElement;
+        const wrapper = document.createElement('div');
+        parent.insertBefore(wrapper, selectedDateContainer);
+        selectedDateContainer.style.display = 'none';
+
+        datePickers.selectedDate = new CustomDatePicker(wrapper, {
+            maxDate: today,
+            defaultDate: today,
+            placeholder: 'Select date',
+            onSelect: (date) => {
+                if (date) {
+                    selectedDateContainer.value = date.toISOString().split('T')[0];
+                    selectedSalesDate = new Date(date);
+                    updateDateDisplay();
+                    loadTodayData();
+                }
+            }
+        });
+    }
+}
+
+// Update the setDefaultDates function to work with custom date pickers
+function setDefaultDatesCustom() {
+    const today = new Date();
+
+    // Set default dates for custom date pickers
+    if (datePickers.updateDate) {
+        datePickers.updateDate.setDate(today);
+    }
+
+    if (datePickers.salesDate) {
+        datePickers.salesDate.setDate(today);
+    }
+
+    if (datePickers.selectedDate) {
+        datePickers.selectedDate.setDate(today);
+    }
+
+    // Also update the hidden native inputs
+    const todayString = today.toISOString().split('T')[0];
+    const updateDateInput = document.getElementById('updateDate');
+    const salesDateInput = document.getElementById('salesDate');
+    const selectedDateInput = document.getElementById('selectedDate');
+
+    if (updateDateInput) updateDateInput.value = todayString;
+    if (salesDateInput) salesDateInput.value = todayString;
+    if (selectedDateInput) selectedDateInput.value = todayString;
+}
+
+// Custom Date Query Function
+function executeCustomQuery() {
+    const queryDate = document.getElementById('queryDate').value;
+
+    if (!queryDate) {
+        showAlert('Please select a date', 'Required Field', 'warning');
+        return;
+    }
+
+    // Get the selected date and create a date range for that entire day
+    const startDate = new Date(queryDate);
+    const endDate = new Date(queryDate);
+    endDate.setHours(23, 59, 59, 999);
+
+    // Filter sales history for the selected date
+    const filteredSales = salesHistory.filter(sale => {
+        const saleDate = new Date(sale.date);
+        return saleDate.toDateString() === startDate.toDateString();
+    });
+
+    // Calculate totals
+    let totalUnits = 0;
+    let totalRevenue = 0;
+    const productSummary = {};
+
+    filteredSales.forEach(sale => {
+        sale.items.forEach(item => {
+            totalUnits += item.quantity;
+            const itemRevenue = item.quantity * (item.price || 0);
+            totalRevenue += itemRevenue;
+
+            // Aggregate by product
+            if (!productSummary[item.model]) {
+                productSummary[item.model] = {
+                    units: 0,
+                    revenue: 0
+                };
+            }
+            productSummary[item.model].units += item.quantity;
+            productSummary[item.model].revenue += itemRevenue;
+        });
+    });
+
+    // Update UI
+    document.getElementById('queryTotalSales').textContent = totalUnits;
+    document.getElementById('queryTotalRevenue').textContent = `ZAR ${totalRevenue.toLocaleString()}`;
+
+    // Update breakdown table
+    const breakdownBody = document.getElementById('queryBreakdownBody');
+    breakdownBody.innerHTML = '';
+
+    // Sort products by units sold (descending)
+    const sortedProducts = Object.entries(productSummary)
+        .sort((a, b) => b[1].units - a[1].units);
+
+    if (sortedProducts.length === 0) {
+        breakdownBody.innerHTML = `
+            <tr>
+                <td colspan="3" style="text-align: center; color: #9CA3AF;">No sales data for selected period</td>
+            </tr>
+        `;
+    } else {
+        sortedProducts.forEach(([model, data]) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${model}</td>
+                <td>${data.units}</td>
+                <td>ZAR ${data.revenue.toLocaleString()}</td>
+            `;
+            breakdownBody.appendChild(row);
+        });
+    }
+
+    // Show results section
+    document.getElementById('queryResults').style.display = 'block';
+
+    // Set date display
+    const dateOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+    const formattedDate = new Date(queryDate).toLocaleDateString('en-US', dateOptions);
+
+    const resultsTitle = document.querySelector('.results-title');
+    if (resultsTitle) {
+        resultsTitle.textContent = `Query Results: ${formattedDate}`;
+    }
+}
+
+// Initialize date input for query
+function initializeDateQuery() {
+    const today = new Date();
+
+    const queryInput = document.getElementById('queryDate');
+    if (queryInput) {
+        queryInput.value = today.toISOString().split('T')[0];
+        queryInput.max = today.toISOString().split('T')[0];
+
+        // Initialize custom date picker for query date
+        initQueryDatePicker();
+    }
+}
+
+// Initialize custom date picker for query date
+function initQueryDatePicker() {
+    const today = new Date();
+
+    // Initialize query date picker
+    const queryDateContainer = document.getElementById('queryDate');
+    if (queryDateContainer && queryDateContainer.type === 'date' && !datePickers.queryDate) {
+        const parent = queryDateContainer.parentElement;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'query-date-wrapper';
+        parent.insertBefore(wrapper, queryDateContainer);
+        queryDateContainer.style.display = 'none';
+
+        datePickers.queryDate = new CustomDatePicker(wrapper, {
+            maxDate: today,
+            defaultDate: today,
+            placeholder: 'Select date',
+            onSelect: (date) => {
+                queryDateContainer.value = date ? date.toISOString().split('T')[0] : '';
+            }
+        });
+    }
+}
+
+// Initialize date pickers when the page loads
+// Note: This is also called during DOM initialization and form mode switches

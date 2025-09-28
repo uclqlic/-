@@ -35,6 +35,19 @@
     --elevation-1: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
     --elevation-2: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
     --elevation-3: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+
+    /* Semantic action colors for consistent UI */
+    --action-primary: #8B5CF6;
+    --action-secondary: #9CA3AF;
+    --action-destructive: #EF4444;
+    --action-warning: #F59E0B;
+    --action-success: #10B981;
+
+    /* Action color hover states */
+    --action-primary-hover: #7C3AED;
+    --action-secondary-hover: #6B7280;
+    --action-destructive-hover: #DC2626;
+    --action-warning-hover: #D97706;
 }
 
 body {
@@ -92,11 +105,35 @@ body {
     display: block;
 }
 
+/* Home page specific layout */
+#homePage {
+    display: none;
+}
+
+#homePage.active {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 140px);
+    padding-top: 20px;
+    padding-bottom: 10px;
+}
+
 /* Action buttons area */
 .action-buttons {
     display: flex;
     gap: 12px;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
+}
+
+.action-buttons.single-button {
+    padding: 0 20px;
+}
+
+.action-btn.full-width {
+    max-width: none !important;
+    width: 100%;
+    padding: 16px 20px;
+    min-height: 64px;
 }
 
 .action-btn {
@@ -104,15 +141,15 @@ body {
     background: var(--white);
     border: 2px solid;
     border-radius: 16px;
-    padding: 20px 16px;
+    padding: 16px;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     position: relative;
-    min-height: 110px;
+    min-height: 64px;
 }
 
 .update-btn {
@@ -145,12 +182,12 @@ body {
 }
 
 .action-btn .material-icons {
-    font-size: 28px;
-    margin-bottom: 4px;
+    font-size: 24px;
+    margin-bottom: 2px;
 }
 
 .action-btn span:not(.material-icons):not(.btn-subtitle) {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     letter-spacing: 0.3px;
 }
@@ -167,10 +204,14 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 12px;
     overflow: hidden;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin: 0 20px;
 }
 
 .table-header {
-    padding: 16px;
+    padding: 12px 16px;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
@@ -240,14 +281,26 @@ body {
     border-collapse: collapse;
 }
 
+/* Make table scrollable */
+.inventory-table-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 200px;
+    max-height: calc(100vh - 280px);
+}
+
 .inventory-table thead {
     background: var(--bg-color);
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .inventory-table th {
     padding: 14px 12px;
     text-align: left;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -256,7 +309,7 @@ body {
 }
 
 .inventory-table td {
-    padding: 14px 12px;
+    padding: 16px 12px;
     font-size: 14px;
     border-bottom: 1px solid var(--border-color);
     transition: background-color 0.2s ease;
@@ -294,6 +347,22 @@ body {
 }
 
 .stock-input {
+    width: 60px;
+    padding: 4px 8px;
+    border: 2px solid var(--primary-purple);
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+}
+
+/* Sales period input field */
+.sales-period-cell.editable {
+    background: #F3F4F6;
+    border-radius: 4px;
+    padding: 4px 8px;
+}
+
+.sales-input {
     width: 60px;
     padding: 4px 8px;
     border: 2px solid var(--primary-purple);
@@ -1499,6 +1568,295 @@ body {
     }
 }
 
+/* Product Management Table */
+.product-table-container {
+    padding: 0 20px 20px 20px;
+    max-height: 400px;
+    overflow-y: auto;
+    position: relative;
+}
+
+.product-management-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.product-management-table thead {
+    background: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.product-management-table thead th {
+    background: white;
+    position: sticky;
+    top: 0;
+}
+
+.product-management-table th {
+    padding: 12px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid #E5E7EB;
+    background: #F9FAFB;
+}
+
+.product-management-table td {
+    padding: 12px;
+    font-size: 14px;
+    border-bottom: 1px solid #F3F4F6;
+}
+
+.product-management-table tbody tr:hover {
+    background: #FAFBFC;
+}
+
+/* Add Model Button in header */
+.section-header .add-model-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--primary-purple);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.section-header .add-model-btn:hover {
+    background: #7C3AED;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+/* Status and Category toggles in table */
+.table-toggle {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+}
+
+.table-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.table-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #E5E7EB;
+    transition: .3s;
+    border-radius: 20px;
+}
+
+.table-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+}
+
+.table-toggle input:checked + .table-toggle-slider {
+    background-color: var(--primary-purple);
+}
+
+.table-toggle input:checked + .table-toggle-slider:before {
+    transform: translateX(16px);
+}
+
+.toggle-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-right: 8px;
+}
+
+.delete-model-btn {
+    background: transparent;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: #9CA3AF;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.delete-model-btn:hover {
+    color: #EF4444;
+    transform: scale(1.1);
+}
+
+.delete-model-btn .material-icons {
+    font-size: 20px;
+}
+
+/* Price Management Table */
+.price-table-container {
+    padding: 0 20px 20px 20px;
+    max-height: 400px;
+    overflow-y: auto;
+    position: relative;
+}
+
+.price-management-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.price-management-table thead {
+    background: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.price-management-table thead th {
+    background: #F9FAFB;
+    position: sticky;
+    top: 0;
+    padding: 12px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid #E5E7EB;
+}
+
+.price-management-table td {
+    padding: 12px;
+    font-size: 14px;
+    border-bottom: 1px solid #F3F4F6;
+}
+
+.price-management-table tbody tr:hover {
+    background: #FAFBFC;
+}
+
+/* Price input field */
+.price-input-field {
+    width: 120px;
+    padding: 6px 10px;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.price-input-field:focus {
+    outline: none;
+    border-color: var(--primary-purple);
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1);
+}
+
+.price-input-field.modified {
+    background: #FEF3C7;
+    border-color: #FCD34D;
+}
+
+/* Price status badge */
+.price-status {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.price-status.not-set {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+/* Clear price button - removed, now using delete-model-btn class */
+
+/* Save button */
+.save-prices-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--primary-purple);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.save-prices-btn:hover {
+    background: #7C3AED;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.model-attributes-panel {
+    background: #F9FAFB;
+    border-radius: 16px;
+    padding: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.selected-model-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.selected-model-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.attribute-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
 .product-item {
     background: var(--white);
     border-radius: 12px;
@@ -2662,4 +3020,434 @@ input:checked + .toggle-slider:before {
     font-size: 13px;
     color: #B45309;
     margin: 0;
+}
+
+/* Custom Date Picker Styles */
+.custom-date-picker {
+    position: relative;
+    width: 100%;
+    z-index: 100;
+}
+
+.date-picker-input {
+    width: 100%;
+    padding: 16px;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    font-size: 15px;
+    font-family: inherit;
+    background: var(--white);
+    transition: border-color 0.2s;
+    font-weight: 400;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.date-picker-input:focus {
+    outline: none;
+    border-color: var(--primary-purple);
+}
+
+.date-picker-input:hover {
+    border-color: var(--primary-purple);
+}
+
+.date-picker-input .date-text {
+    flex: 1;
+}
+
+.date-picker-input .calendar-icon {
+    color: var(--text-secondary);
+    font-size: 20px;
+}
+
+.date-picker-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 320px;
+    width: calc(100% + 152px); /* Extend to cover time input (140px + gap 12px) */
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+    margin-top: 4px;
+}
+
+.date-picker-dropdown.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.date-picker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.date-picker-nav {
+    background: none;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    color: var(--text-secondary);
+}
+
+.date-picker-nav:hover {
+    background-color: var(--bg-color);
+    color: var(--primary-purple);
+}
+
+.date-picker-nav:active {
+    background-color: var(--primary-container);
+}
+
+.date-picker-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.date-picker-calendar {
+    padding: 16px;
+}
+
+.date-picker-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.date-picker-weekday {
+    padding: 8px 4px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.date-picker-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.date-picker-day {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-primary);
+    font-family: inherit;
+}
+
+.date-picker-day:hover:not(.disabled):not(.other-month) {
+    background-color: var(--primary-container);
+    color: var(--primary-purple);
+}
+
+.date-picker-day.selected {
+    background-color: var(--primary-purple);
+    color: white;
+    font-weight: 600;
+}
+
+.date-picker-day.today:not(.selected) {
+    background-color: var(--bg-color);
+    color: var(--primary-purple);
+    font-weight: 600;
+}
+
+.date-picker-day.other-month {
+    color: var(--text-tertiary);
+}
+
+.date-picker-day.disabled {
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.date-picker-day.disabled:hover {
+    background: none;
+}
+
+.date-picker-actions {
+    display: flex;
+    gap: 8px;
+    padding: 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+.date-picker-btn {
+    flex: 1;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--white);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.date-picker-btn:hover {
+    border-color: var(--primary-purple);
+    color: var(--primary-purple);
+}
+
+.date-picker-btn.primary {
+    background: var(--primary-purple);
+    color: white;
+    border-color: var(--primary-purple);
+}
+
+.date-picker-btn.primary:hover {
+    background: var(--action-primary-hover);
+    border-color: var(--action-primary-hover);
+}
+
+/* Date picker overlay for mobile */
+.date-picker-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+}
+
+.date-picker-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Custom Date Query Styles */
+.date-query-container {
+    padding: 20px;
+}
+
+.date-range-inputs {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.date-input-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.date-input-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.query-date-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.query-date-input:focus {
+    outline: none;
+    border-color: var(--primary-purple);
+}
+
+/* Query date wrapper for custom date picker */
+.query-date-wrapper {
+    width: 100%;
+}
+
+.query-date-wrapper .custom-date-picker {
+    width: 100%;
+}
+
+.query-date-wrapper .date-picker-dropdown {
+    width: 100%;
+    min-width: 280px;
+}
+
+.query-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    background: var(--primary-purple);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    min-width: 100px;
+}
+
+.query-btn:hover {
+    background: var(--action-primary-hover);
+    transform: translateY(-1px);
+}
+
+.query-btn .material-icons {
+    font-size: 18px;
+}
+
+/* Query Results */
+.query-results {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.results-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.results-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.result-card {
+    background: var(--bg-color);
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.result-label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.result-value {
+    display: block;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--primary-purple);
+}
+
+/* Product Breakdown */
+.product-breakdown {
+    margin-top: 24px;
+}
+
+.product-breakdown h5 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.breakdown-table-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow-x: hidden;
+}
+
+.breakdown-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.breakdown-table thead {
+    background: var(--bg-color);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.breakdown-table th {
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-color);
+}
+
+.breakdown-table td {
+    padding: 10px 12px;
+    font-size: 13px;
+    border-top: 1px solid var(--border-color);
+}
+
+.breakdown-table tbody tr:first-child td {
+    border-top: none;
+}
+
+.breakdown-table tbody tr:hover {
+    background: var(--bg-color);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 480px) {
+    .date-picker-dropdown {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 320px;
+        max-width: calc(100vw - 40px);
+        margin-top: 0;
+    }
+
+    .date-picker-dropdown.open {
+        transform: translate(-50%, -50%);
+    }
 }

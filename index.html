@@ -20,16 +20,11 @@
         <!-- Home主页 -->
         <div id="homePage" class="page active">
             <!-- 操作按钮区 -->
-            <div class="action-buttons">
-                <button class="action-btn update-btn" onclick="toggleUpdateMode()">
+            <div class="action-buttons single-button">
+                <button class="action-btn update-btn full-width" onclick="toggleUpdateMode()">
                     <span class="material-icons">edit_note</span>
                     <span>Quick Edit</span>
                     <span class="btn-subtitle">Edit directly in table</span>
-                </button>
-                <button class="action-btn sales-btn" onclick="showUnifiedForm()">
-                    <span class="material-icons">inventory_2</span>
-                    <span>Update Stock</span>
-                    <span class="btn-subtitle">Record inventory updates</span>
                 </button>
             </div>
 
@@ -44,19 +39,22 @@
                         </button>
                     </div>
                 </div>
-                <table class="inventory-table">
-                    <thead>
-                        <tr>
-                            <th>Product Model</th>
-                            <th>Stock Qty</th>
-                            <th>Safety Stock</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="inventoryTableBody">
-                        <!-- 数据由JavaScript动态生成 -->
-                    </tbody>
-                </table>
+                <div class="inventory-table-wrapper">
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>Product Model</th>
+                                <th>Stock Qty</th>
+                                <th>Safety Stock</th>
+                                <th id="salesPeriodHeader">Sales (9D)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody">
+                            <!-- 数据由JavaScript动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -93,7 +91,7 @@
                         <div class="form-input-group">
                             <span class="input-hint">Select the date and time for stock update</span>
                             <div class="date-time-inputs">
-                                <input type="date" id="updateDate" class="date-input" lang="en">
+                                <input type="date" id="updateDate" class="date-input" lang="en-US">
                                 <input type="time" id="updateTime" class="time-input">
                             </div>
                         </div>
@@ -127,7 +125,7 @@
                         <div class="form-input-group">
                             <span class="input-hint">Select the date and time for sales record</span>
                             <div class="date-time-inputs">
-                                <input type="date" id="salesDate" class="date-input" lang="en">
+                                <input type="date" id="salesDate" class="date-input" lang="en-US">
                                 <input type="time" id="salesTime" class="time-input">
                             </div>
                         </div>
@@ -246,30 +244,6 @@
 
             <!-- Month View -->
             <div id="monthView" class="time-view">
-                <div class="stats-cards">
-                    <div class="stat-card clickable" onclick="editMonthlyTargets()" tabindex="0" role="button" aria-label="Edit monthly targets">
-                        <div class="stat-label">Monthly Target Revenue</div>
-                        <div class="stat-value-with-icon">
-                            <span class="stat-value" id="monthTargetRevenue">ZAR 500,000</span>
-                            <span class="material-icons edit-icon" aria-hidden="true">edit</span>
-                        </div>
-                    </div>
-                    <div class="stat-card clickable" onclick="editMonthlyTargets()" tabindex="0" role="button" aria-label="Edit monthly targets">
-                        <div class="stat-label">Target Sale Units</div>
-                        <div class="stat-value-with-icon">
-                            <span class="stat-value" id="monthTargetTotalUnits">150</span>
-                            <span class="material-icons edit-icon" aria-hidden="true">edit</span>
-                        </div>
-                    </div>
-                    <div class="stat-card clickable" onclick="editMonthlyTargets()" tabindex="0" role="button" aria-label="Edit monthly targets">
-                        <div class="stat-label">Target Structure Units</div>
-                        <div class="stat-value-with-icon">
-                            <span class="stat-value" id="monthTargetStructureUnits">100</span>
-                            <span class="material-icons edit-icon" aria-hidden="true">edit</span>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="progress-cards">
                     <div class="progress-card">
                         <div class="progress-header">
@@ -311,6 +285,30 @@
                     </div>
                 </div>
 
+                <div class="stats-cards">
+                    <div class="stat-card clickable" onclick="editMonthlyTargets()" tabindex="0" role="button" aria-label="Edit monthly targets">
+                        <div class="stat-label">Monthly Target Revenue</div>
+                        <div class="stat-value-with-icon">
+                            <span class="stat-value" id="monthTargetRevenue">ZAR 500,000</span>
+                            <span class="material-icons edit-icon" aria-hidden="true">edit</span>
+                        </div>
+                    </div>
+                    <div class="stat-card clickable" onclick="editMonthlyTargets()" tabindex="0" role="button" aria-label="Edit monthly targets">
+                        <div class="stat-label">Target Sale Units</div>
+                        <div class="stat-value-with-icon">
+                            <span class="stat-value" id="monthTargetTotalUnits">150</span>
+                            <span class="material-icons edit-icon" aria-hidden="true">edit</span>
+                        </div>
+                    </div>
+                    <div class="stat-card clickable" onclick="editMonthlyTargets()" tabindex="0" role="button" aria-label="Edit monthly targets">
+                        <div class="stat-label">Target Structure Units</div>
+                        <div class="stat-value-with-icon">
+                            <span class="stat-value" id="monthTargetStructureUnits">100</span>
+                            <span class="material-icons edit-icon" aria-hidden="true">edit</span>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -322,20 +320,54 @@
             </header>
 
             <div class="personal-content">
-                <!-- Product Attributes Section -->
-                <div class="section-card product-attributes-section">
+                <!-- Update Stock Section (First) -->
+                <div class="section-card">
                     <div class="section-header">
                         <div class="section-icon">
                             <span class="material-icons">inventory_2</span>
                         </div>
                         <div>
-                            <h3 class="section-title">Product Attributes</h3>
-                            <p class="section-description">Configure product status and classification</p>
+                            <h3 class="section-title">Update Stock</h3>
+                            <p class="section-description">Record inventory updates and sales</p>
                         </div>
                     </div>
+                    <button class="action-link" onclick="showUnifiedForm()">
+                        <span>Update Inventory</span>
+                        <span class="material-icons">arrow_forward</span>
+                    </button>
+                </div>
 
-                    <div class="products-grid">
-                        <!-- Products will be dynamically generated -->
+                <!-- Product Attributes Section -->
+                <div class="section-card product-attributes-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <span class="material-icons">category</span>
+                        </div>
+                        <div>
+                            <h3 class="section-title">Product Management</h3>
+                            <p class="section-description">Manage product models and attributes</p>
+                        </div>
+                        <button class="add-model-btn" onclick="showAddModelDialog()" title="Add new model">
+                            <span class="material-icons">add</span>
+                            <span>Add Model</span>
+                        </button>
+                    </div>
+
+                    <!-- Product Table -->
+                    <div class="product-table-container">
+                        <table class="product-management-table">
+                            <thead>
+                                <tr>
+                                    <th>Product Model</th>
+                                    <th>Status</th>
+                                    <th>Category</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productTableBody">
+                                <!-- Will be populated dynamically -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -349,11 +381,33 @@
                             <h3 class="section-title">Price Settings</h3>
                             <p class="section-description">Manage product pricing</p>
                         </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="save-prices-btn" onclick="savePriceChanges()" style="display: none;">
+                                <span class="material-icons">save</span>
+                                <span>Save Changes</span>
+                            </button>
+                            <button class="add-model-btn" onclick="showAddModelDialog()" title="Add new model">
+                                <span class="material-icons">add</span>
+                                <span>Add Model</span>
+                            </button>
+                        </div>
                     </div>
-                    <button class="action-link" onclick="editPrices()">
-                        <span>Edit Prices</span>
-                        <span class="material-icons">arrow_forward</span>
-                    </button>
+
+                    <!-- Price Table -->
+                    <div class="price-table-container">
+                        <table class="price-management-table">
+                            <thead>
+                                <tr>
+                                    <th>Product Model</th>
+                                    <th>Price (ZAR)</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="priceTableBody">
+                                <!-- Will be populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <!-- Safety Stock Settings Section -->
@@ -371,6 +425,65 @@
                         <span>Edit Safety Stock</span>
                         <span class="material-icons">arrow_forward</span>
                     </button>
+                </div>
+
+                <!-- Custom Date Query Section -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <span class="material-icons">query_stats</span>
+                        </div>
+                        <div>
+                            <h3 class="section-title">Custom Date Query</h3>
+                            <p class="section-description">View sales data from selected date</p>
+                        </div>
+                    </div>
+                    <div class="date-query-container">
+                        <div class="date-range-inputs">
+                            <div class="date-input-group">
+                                <label for="queryDate">Select Date</label>
+                                <input type="date" id="queryDate" class="query-date-input">
+                            </div>
+                            <button class="query-btn" onclick="executeCustomQuery()">
+                                <span class="material-icons">search</span>
+                                <span>Query</span>
+                            </button>
+                        </div>
+
+                        <!-- Query Results -->
+                        <div id="queryResults" class="query-results" style="display: none;">
+                            <h4 class="results-title">Query Results</h4>
+                            <div class="results-summary">
+                                <div class="result-card">
+                                    <span class="result-label">Total Sales</span>
+                                    <span class="result-value" id="queryTotalSales">0</span>
+                                </div>
+                                <div class="result-card">
+                                    <span class="result-label">Total Revenue</span>
+                                    <span class="result-value" id="queryTotalRevenue">ZAR 0</span>
+                                </div>
+                            </div>
+
+                            <!-- Product breakdown table -->
+                            <div class="product-breakdown">
+                                <h5>Product Breakdown</h5>
+                                <div class="breakdown-table-container">
+                                    <table class="breakdown-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Model</th>
+                                                <th>Units Sold</th>
+                                                <th>Revenue</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="queryBreakdownBody">
+                                            <!-- Dynamic content -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -404,6 +517,32 @@
             </div>
             <div class="alert-actions">
                 <button class="alert-button primary" onclick="closeAlert()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Model Dialog -->
+    <div class="alert-overlay" id="addModelDialog" role="dialog" aria-modal="true" aria-labelledby="add-model-title">
+        <div class="alert-dialog" style="max-width: 400px;">
+            <div class="alert-icon">
+                <span class="material-icons">add_box</span>
+            </div>
+            <div class="alert-content">
+                <h3 class="alert-title" id="add-model-title">Add New Product Model</h3>
+                <div class="form-input-group" style="margin: 20px 0;">
+                    <input type="text"
+                           id="newModelInput"
+                           class="form-input"
+                           placeholder="Enter model name (e.g., 65Q7700H)"
+                           style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                    <span class="input-hint" style="font-size: 12px; color: #666; margin-top: 8px; display: block;">
+                        Model name should be alphanumeric (e.g., 100Q7800H)
+                    </span>
+                </div>
+            </div>
+            <div class="alert-actions">
+                <button class="alert-button secondary" onclick="closeAddModelDialog()">Cancel</button>
+                <button class="alert-button primary" onclick="addNewModel()">Add Model</button>
             </div>
         </div>
     </div>
