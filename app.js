@@ -200,11 +200,7 @@ function renderInventoryTable() {
         if (aData.stock === 0 && bData.stock > 0) return -1;
         if (aData.stock > 0 && bData.stock === 0) return 1;
 
-        // Low stock comes next
-        const aWarning = aData.stock < aData.safetyStock;
-        const bWarning = bData.stock < bData.safetyStock;
-        if (aWarning && !bWarning) return -1;
-        if (!aWarning && bWarning) return 1;
+        // All other items are equal priority
 
         return 0;
     });
@@ -220,9 +216,6 @@ function renderInventoryTable() {
         if (data.stock === 0) {
             rowClass = 'danger-row';
             statusBadge = '<span class="status-badge status-danger">Out of Stock</span>';
-        } else if (data.stock < data.safetyStock && data.safetyStock > 0) {
-            rowClass = 'warning-row';
-            statusBadge = '<span class="status-badge status-warning">Low Stock</span>';
         } else {
             statusBadge = '<span class="status-badge status-normal">Normal</span>';
         }
@@ -710,8 +703,6 @@ function exportToExcel() {
         let status = 'Normal';
         if (inv.stock === 0) {
             status = 'Out of Stock';
-        } else if (inv.stock < inv.safetyStock) {
-            status = 'Low Stock';
         }
 
         data.push([
@@ -734,7 +725,6 @@ function exportToExcel() {
     csvContent += '\n\nSummary\n';
     csvContent += 'Total Models,' + models.length + '\n';
     csvContent += 'Out of Stock Count,' + data.filter(row => row[3] === 'Out of Stock').length + '\n';
-    csvContent += 'Low Stock Count,' + data.filter(row => row[3] === 'Low Stock').length + '\n';
     csvContent += 'Export Time,' + new Date().toLocaleString('en-US') + '\n';
 
     // Create download link
