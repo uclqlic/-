@@ -1,0 +1,321 @@
+/* Material Design Simplified Variables */
+:root {
+  --primary-color: #1976D2;
+  --primary-light: #E3F2FD;
+  --secondary-color: #424242;
+  --success-color: #4CAF50;
+  --warning-color: #FF9800;
+  --error-color: #F44336;
+  --surface-color: #FFFFFF;
+  --background-color: #F5F5F5;
+  --text-primary: #212121;
+  --text-secondary: #757575;
+  --border-color: #E0E0E0;
+
+  /* Elevation shadows */
+  --shadow-1: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  --shadow-2: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+}
+
+/* Reset and Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+/* Header */
+.header {
+  background-color: var(--surface-color);
+  padding: 24px;
+  text-align: center;
+  box-shadow: var(--shadow-1);
+  margin-bottom: 32px;
+}
+
+.header h1 {
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.header p {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* Main Content */
+.main-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* Actions Section */
+.actions-section {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  min-height: 36px;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-2);
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #1565C0;
+}
+
+.btn-secondary {
+  background-color: var(--surface-color);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background-color: #F8F8F8;
+}
+
+.btn-cancel {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  color: var(--text-secondary);
+}
+
+.btn-close:hover {
+  background-color: rgba(0,0,0,0.04);
+}
+
+/* Update Form */
+.update-form {
+  background-color: var(--surface-color);
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 32px;
+  box-shadow: var(--shadow-1);
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.form-header h2 {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* Form Styles */
+.simple-form {
+  max-width: 400px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.form-group select,
+.form-group input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 16px;
+  background-color: var(--surface-color);
+  transition: border-color 0.2s ease;
+}
+
+.form-group select:focus,
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+/* Inventory Section */
+.inventory-section {
+  background-color: var(--surface-color);
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: var(--shadow-1);
+}
+
+.inventory-section h2 {
+  font-size: 20px;
+  font-weight: 500;
+  margin-bottom: 24px;
+  color: var(--text-primary);
+}
+
+/* Table Styles */
+.table-container {
+  overflow-x: auto;
+}
+
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--surface-color);
+}
+
+.inventory-table th,
+.inventory-table td {
+  text-align: left;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.inventory-table th {
+  background-color: #FAFAFA;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.inventory-table td {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.inventory-table tbody tr:hover {
+  background-color: rgba(25, 118, 210, 0.04);
+}
+
+/* Stock Status Indicators */
+.stock-status {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.stock-normal {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: var(--success-color);
+}
+
+.stock-low {
+  background-color: rgba(255, 152, 0, 0.1);
+  color: var(--warning-color);
+}
+
+.stock-out {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: var(--error-color);
+}
+
+/* Material Icons */
+.material-icons {
+  font-size: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 0 12px;
+  }
+
+  .actions-section {
+    flex-direction: column;
+  }
+
+  .btn {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .update-form {
+    padding: 16px;
+  }
+
+  .inventory-section {
+    padding: 16px;
+  }
+
+  .inventory-table th,
+  .inventory-table td {
+    padding: 12px 8px;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .form-actions .btn {
+    width: 100%;
+  }
+}
+
+/* Animation */
+.update-form {
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

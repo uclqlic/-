@@ -1,0 +1,11 @@
+{
+  "name": "makro-inventory-management",
+  "version": "1.0.0",
+  "description": "Makro Inventory Management System",
+  "scripts": {
+    "dev": "echo 'Open index.html in browser'",
+    "build": "echo 'No build required for static site'"
+  },
+  "author": "",
+  "license": "MIT"
+}

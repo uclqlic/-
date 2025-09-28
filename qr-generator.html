@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator - Makro Inventory</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        #qrcode {
+            margin: 30px auto;
+            padding: 20px;
+            background: white;
+            border: 2px solid #f0f0f0;
+            border-radius: 15px;
+            display: inline-block;
+        }
+
+        #qrcode img {
+            display: block;
+        }
+
+        .url-display {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            word-break: break-all;
+            font-size: 14px;
+            color: #666;
+            font-family: monospace;
+        }
+
+        .instructions {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .instructions h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .instructions ol {
+            text-align: left;
+            color: #666;
+            line-height: 1.8;
+            font-size: 14px;
+        }
+
+        .instructions li {
+            margin-bottom: 10px;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+        }
+
+        .status {
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .status.local {
+            background: #FFF3CD;
+            color: #856404;
+            border: 1px solid #FFE69C;
+        }
+
+        .status.deployed {
+            background: #D4EDDA;
+            color: #155724;
+            border: 1px solid #C3E6CB;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 Makro Inventory System</h1>
+        <p class="subtitle">QR Code for Quick Access</p>
+
+        <div id="status" class="status local">
+            ⚠️ This is a local preview. Deploy to Vercel for permanent QR code.
+        </div>
+
+        <div id="qrcode"></div>
+
+        <div class="url-display" id="urlDisplay">
+            Loading URL...
+        </div>
+
+        <a href="index.html" class="button">Open Application</a>
+
+        <div class="instructions">
+            <h3>Deployment Instructions:</h3>
+            <ol>
+                <li><strong>Install Vercel CLI:</strong><br>
+                    <code>npm install -g vercel</code>
+                </li>
+                <li><strong>Deploy to Vercel:</strong><br>
+                    Run <code>vercel</code> in this directory
+                </li>
+                <li><strong>Get your URL:</strong><br>
+                    After deployment, you'll get a URL like:<br>
+                    <code>https://your-app.vercel.app</code>
+                </li>
+                <li><strong>Share QR Code:</strong><br>
+                    This QR code can be scanned to access your app instantly!
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Generate QR code for current URL or Vercel URL
+        function generateQR() {
+            const currentUrl = window.location.href.replace('qr-generator.html', 'index.html');
+            const isLocal = currentUrl.includes('localhost') || currentUrl.includes('127.0.0.1') || currentUrl.includes('file://');
+
+            // If deployed on Vercel, use the actual URL
+            const urlToEncode = isLocal ? 'https://your-app.vercel.app' : window.location.origin;
+
+            // Update status
+            const statusDiv = document.getElementById('status');
+            if (!isLocal) {
+                statusDiv.className = 'status deployed';
+                statusDiv.innerHTML = '✅ Deployed on Vercel - QR Code is ready to share!';
+            }
+
+            // Display URL
+            document.getElementById('urlDisplay').textContent = isLocal ?
+                'Deploy to Vercel to get permanent URL' :
+                urlToEncode;
+
+            // Generate QR code
+            const qr = qrcode(0, 'M');
+            qr.addData(isLocal ? currentUrl : urlToEncode);
+            qr.make();
+
+            // Create img element
+            const imgTag = qr.createImgTag(5, 10);
+            document.getElementById('qrcode').innerHTML = imgTag;
+        }
+
+        // Generate QR on load
+        generateQR();
+    </script>
+</body>
+</html>
