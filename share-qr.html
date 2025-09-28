@@ -155,8 +155,13 @@
     </div>
 
     <script>
-        // Get current URL
-        const currentUrl = window.location.href.replace('share-qr.html', 'index.html');
+        // Get current URL - use GitHub Pages URL if available
+        let currentUrl = window.location.href.replace('share-qr.html', 'index.html');
+
+        // If on localhost or file://, use GitHub Pages URL
+        if (window.location.hostname === 'localhost' || window.location.protocol === 'file:') {
+            currentUrl = 'https://uclqlic.github.io/-/index.html';
+        }
 
         // Display URL
         document.getElementById('urlDisplay').textContent = currentUrl;
