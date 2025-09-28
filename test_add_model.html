@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Add Model Feature</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #8B5CF6;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .test-dropdown {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        button {
+            background: #8B5CF6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #7C3AED;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            background: #F0F9FF;
+            border-radius: 6px;
+            border: 1px solid #BAE6FD;
+        }
+        .success {
+            background: #D1FAE5;
+            border-color: #6EE7B7;
+            color: #065F46;
+        }
+        .models-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .model-chip {
+            background: #F3F4F6;
+            padding: 5px 12px;
+            border-radius: 16px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test: Add New Model Feature</h1>
+
+        <div class="test-section">
+            <h2>Test the Feature Here:</h2>
+            <select class="test-dropdown" id="testSelect" onchange="handleTestSelect(this)">
+                <option value="">Loading models...</option>
+            </select>
+            <p style="color: #666; font-size: 14px;">
+                Select "+ Add New Model" option to test adding a new product model
+            </p>
+        </div>
+
+        <div class="test-section">
+            <h2>Current Models in System:</h2>
+            <div id="modelsList" class="models-list">
+                Loading...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Quick Actions:</h2>
+            <button onclick="window.location.href='/'">Go to Main App</button>
+            <button onclick="refreshModels()">Refresh Models</button>
+            <button onclick="clearTestModel()">Clear Test Models</button>
+        </div>
+
+        <div id="status" class="status">
+            Checking system...
+        </div>
+    </div>
+
+    <script>
+        // Load models from localStorage
+        function loadModels() {
+            const savedModels = localStorage.getItem('makroModels');
+            if (savedModels) {
+                return JSON.parse(savedModels);
+            }
+            // Default models
+            return [
+                "100Q7800H", "86X8700G", "86X8500G", "75X8700G", "75X8500G",
+                "75Q6600H", "65X8700G", "65X8500G", "65Q6620G", "60Q6600H",
+                "55Q6600H", "43E5520H", "40E5520H", "32E5520H"
+            ];
+        }
+
+        // Populate test dropdown
+        function populateDropdown() {
+            const models = loadModels();
+            const select = document.getElementById('testSelect');
+
+            select.innerHTML = `
+                <option value="">Select Product Model</option>
+                ${models.map(model => `<option value="${model}">${model}</option>`).join('')}
+                <option value="__ADD_NEW__" style="font-weight: 600; color: #8B5CF6;">+ Add New Model</option>
+            `;
+        }
+
+        // Handle test select
+        function handleTestSelect(selectElement) {
+            if (selectElement.value === '__ADD_NEW__') {
+                const newModel = prompt('Enter new model name:');
+                if (newModel) {
+                    addNewTestModel(newModel.trim().toUpperCase());
+                } else {
+                    selectElement.value = '';
+                }
+            } else if (selectElement.value) {
+                document.getElementById('status').innerHTML = `Selected model: <strong>${selectElement.value}</strong>`;
+                document.getElementById('status').className = 'status success';
+            }
+        }
+
+        // Add new test model
+        function addNewTestModel(modelName) {
+            let models = loadModels();
+
+            if (models.includes(modelName)) {
+                alert('This model already exists!');
+                document.getElementById('testSelect').value = '';
+                return;
+            }
+
+            models.push(modelName);
+            models.sort();
+
+            // Save to localStorage
+            localStorage.setItem('makroModels', JSON.stringify(models));
+
+            // Update UI
+            populateDropdown();
+            refreshModels();
+
+            // Select the new model
+            document.getElementById('testSelect').value = modelName;
+
+            document.getElementById('status').innerHTML = `✅ Successfully added model: <strong>${modelName}</strong>`;
+            document.getElementById('status').className = 'status success';
+        }
+
+        // Refresh models display
+        function refreshModels() {
+            const models = loadModels();
+            const container = document.getElementById('modelsList');
+
+            container.innerHTML = models.map(model =>
+                `<span class="model-chip">${model}</span>`
+            ).join('');
+
+            document.getElementById('status').innerHTML = `Total models: ${models.length}`;
+        }
+
+        // Clear test models (keep original ones)
+        function clearTestModel() {
+            const defaultModels = [
+                "100Q7800H", "86X8700G", "86X8500G", "75X8700G", "75X8500G",
+                "75Q6600H", "65X8700G", "65X8500G", "65Q6620G", "60Q6600H",
+                "55Q6600H", "43E5520H", "40E5520H", "32E5520H"
+            ];
+
+            localStorage.setItem('makroModels', JSON.stringify(defaultModels));
+            populateDropdown();
+            refreshModels();
+
+            document.getElementById('status').innerHTML = 'Reset to default models';
+            document.getElementById('status').className = 'status';
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            populateDropdown();
+            refreshModels();
+        };
+    </script>
+</body>
+</html>

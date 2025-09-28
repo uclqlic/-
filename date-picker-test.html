@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Date Picker Test</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css" type="text/css">
+    <style>
+        body {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--white);
+        }
+        .test-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--primary-purple);
+        }
+        .test-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+        .test-result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .test-pass {
+            background: var(--success-container);
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
+        }
+        .test-fail {
+            background: var(--error-container);
+            color: var(--danger-color);
+            border: 1px solid var(--danger-color);
+        }
+        .date-input-wrapper {
+            margin-bottom: 15px;
+        }
+        .date-input-wrapper label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <h1>Custom Date Picker Test</h1>
+    <p>This page tests the custom date picker implementation that displays in English regardless of system locale.</p>
+
+    <div class="test-section">
+        <div class="test-title">Test 1: Update Date Picker</div>
+        <div class="test-description">This should show a custom date picker with English month/day names and "Today"/"Clear" buttons.</div>
+
+        <div class="date-input-wrapper">
+            <label for="updateDate">Update Date:</label>
+            <input type="date" id="updateDate" class="date-input">
+        </div>
+
+        <div class="test-result" id="test1Result">Initializing...</div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">Test 2: Sales Date Picker</div>
+        <div class="test-description">Another instance of the custom date picker for sales date selection.</div>
+
+        <div class="date-input-wrapper">
+            <label for="salesDate">Sales Date:</label>
+            <input type="date" id="salesDate" class="date-input">
+        </div>
+
+        <div class="test-result" id="test2Result">Initializing...</div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">Test 3: Selected Date Picker (Analytics)</div>
+        <div class="test-description">Date picker used in sales analytics section.</div>
+
+        <div class="date-input-wrapper">
+            <label for="selectedDate">Selected Date:</label>
+            <input type="date" id="selectedDate" class="date-input">
+        </div>
+
+        <div class="test-result" id="test3Result">Initializing...</div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">Test 4: Mobile Responsiveness</div>
+        <div class="test-description">Test how the date picker behaves on mobile devices (resize window to test).</div>
+
+        <button onclick="testMobileView()" class="action-btn update-btn" style="margin-bottom: 15px;">
+            <span>Test Mobile View</span>
+        </button>
+
+        <div class="test-result" id="test4Result">Click button to test mobile responsiveness</div>
+    </div>
+
+    <script>
+        // Global variables for compatibility
+        let selectedSalesDate = new Date();
+        const datePickers = {};
+
+        // Mock functions to prevent errors
+        function updateDateDisplay() {
+            console.log('updateDateDisplay called');
+        }
+
+        function loadTodayData() {
+            console.log('loadTodayData called');
+        }
+
+        // Test results
+        function updateTestResult(testId, passed, message) {
+            const resultDiv = document.getElementById(testId);
+            resultDiv.className = `test-result ${passed ? 'test-pass' : 'test-fail'}`;
+            resultDiv.textContent = message;
+        }
+
+        // Test mobile view
+        function testMobileView() {
+            const width = window.innerWidth;
+            const isMobile = width <= 480;
+
+            updateTestResult('test4Result', true,
+                `Current viewport: ${width}px. ${isMobile ? 'Mobile view active' : 'Desktop view active'}. ` +
+                'On mobile, date pickers should show as centered modals with overlay.'
+            );
+        }
+
+        // Initialize tests
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, initializing tests...');
+
+            // Test initialization delay
+            setTimeout(() => {
+                // Test 1: Check if update date picker is initialized
+                const test1Passed = datePickers.updateDate &&
+                                   datePickers.updateDate.pickerElement &&
+                                   document.getElementById('updateDate').style.display === 'none';
+                updateTestResult('test1Result', test1Passed,
+                    test1Passed ? 'Custom date picker initialized successfully' : 'Failed to initialize custom date picker');
+
+                // Test 2: Check if sales date picker is initialized
+                const test2Passed = datePickers.salesDate &&
+                                   datePickers.salesDate.pickerElement &&
+                                   document.getElementById('salesDate').style.display === 'none';
+                updateTestResult('test2Result', test2Passed,
+                    test2Passed ? 'Sales date picker initialized successfully' : 'Failed to initialize sales date picker');
+
+                // Test 3: Check if selected date picker is initialized
+                const test3Passed = datePickers.selectedDate &&
+                                   datePickers.selectedDate.pickerElement &&
+                                   document.getElementById('selectedDate').style.display === 'none';
+                updateTestResult('test3Result', test3Passed,
+                    test3Passed ? 'Selected date picker initialized successfully' : 'Failed to initialize selected date picker');
+
+                // Test overall functionality
+                const allTestsPassed = test1Passed && test2Passed && test3Passed;
+                console.log('Test results:', { test1Passed, test2Passed, test3Passed, allTestsPassed });
+
+                if (allTestsPassed) {
+                    console.log('All date picker tests passed! Custom date pickers are working correctly.');
+                } else {
+                    console.log('Some tests failed. Check the implementation.');
+                }
+            }, 200);
+        });
+    </script>
+
+    <!-- Include the main app.js for date picker functionality -->
+    <script>
+        // Custom Date Picker Implementation (extracted from app.js)
+        class CustomDatePicker {
+            constructor(element, options = {}) {
+                this.element = element;
+                this.options = {
+                    maxDate: options.maxDate || new Date(),
+                    minDate: options.minDate || null,
+                    defaultDate: options.defaultDate || new Date(),
+                    onSelect: options.onSelect || (() => {}),
+                    placeholder: options.placeholder || 'Select date',
+                    ...options
+                };
+
+                this.selectedDate = null;
+                this.viewDate = new Date();
+                this.isOpen = false;
+
+                this.monthNames = [
+                    'January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'
+                ];
+
+                this.dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+                this.init();
+            }
+
+            init() {
+                this.render();
+                this.bindEvents();
+                this.setDate(this.options.defaultDate);
+            }
+
+            render() {
+                const picker = document.createElement('div');
+                picker.className = 'custom-date-picker';
+                picker.innerHTML = `
+                    <div class="date-picker-input" tabindex="0">
+                        <span class="date-text">${this.options.placeholder}</span>
+                        <span class="material-icons calendar-icon">event</span>
+                    </div>
+                    <div class="date-picker-dropdown">
+                        <div class="date-picker-header">
+                            <button class="date-picker-nav" data-action="prev-month">
+                                <span class="material-icons">chevron_left</span>
+                            </button>
+                            <h3 class="date-picker-title"></h3>
+                            <button class="date-picker-nav" data-action="next-month">
+                                <span class="material-icons">chevron_right</span>
+                            </button>
+                        </div>
+                        <div class="date-picker-calendar">
+                            <div class="date-picker-weekdays"></div>
+                            <div class="date-picker-days"></div>
+                        </div>
+                        <div class="date-picker-actions">
+                            <button class="date-picker-btn" data-action="today">Today</button>
+                            <button class="date-picker-btn" data-action="clear">Clear</button>
+                        </div>
+                    </div>
+                `;
+
+                this.element.appendChild(picker);
+
+                // Store references to elements
+                this.pickerElement = picker;
+                this.inputElement = picker.querySelector('.date-picker-input');
+                this.dropdownElement = picker.querySelector('.date-picker-dropdown');
+                this.titleElement = picker.querySelector('.date-picker-title');
+                this.weekdaysElement = picker.querySelector('.date-picker-weekdays');
+                this.daysElement = picker.querySelector('.date-picker-days');
+                this.dateTextElement = picker.querySelector('.date-text');
+
+                this.renderWeekdays();
+                this.renderCalendar();
+            }
+
+            bindEvents() {
+                // Input click to toggle dropdown
+                this.inputElement.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.toggle();
+                });
+
+                // Keyboard support for input
+                this.inputElement.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.toggle();
+                    }
+                });
+
+                // Navigation buttons
+                this.dropdownElement.addEventListener('click', (e) => {
+                    const action = e.target.closest('[data-action]')?.dataset.action;
+                    if (!action) return;
+
+                    e.stopPropagation();
+
+                    switch (action) {
+                        case 'prev-month':
+                            this.navigateMonth(-1);
+                            break;
+                        case 'next-month':
+                            this.navigateMonth(1);
+                            break;
+                        case 'today':
+                            this.selectToday();
+                            break;
+                        case 'clear':
+                            this.clear();
+                            break;
+                    }
+                });
+
+                // Day selection
+                this.daysElement.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('date-picker-day') &&
+                        !e.target.classList.contains('disabled') &&
+                        !e.target.classList.contains('other-month')) {
+
+                        const day = parseInt(e.target.textContent);
+                        const newDate = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth(), day);
+                        this.selectDate(newDate);
+                    }
+                });
+
+                // Close on outside click
+                document.addEventListener('click', (e) => {
+                    if (!this.pickerElement.contains(e.target)) {
+                        this.close();
+                    }
+                });
+
+                // Close on escape key
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.isOpen) {
+                        this.close();
+                    }
+                });
+            }
+
+            renderWeekdays() {
+                this.weekdaysElement.innerHTML = this.dayNames
+                    .map(day => `<div class="date-picker-weekday">${day}</div>`)
+                    .join('');
+            }
+
+            renderCalendar() {
+                const year = this.viewDate.getFullYear();
+                const month = this.viewDate.getMonth();
+
+                // Update title
+                this.titleElement.textContent = `${this.monthNames[month]} ${year}`;
+
+                // Get first day of month and number of days
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const daysInMonth = lastDay.getDate();
+                const startingDayOfWeek = firstDay.getDay();
+
+                // Get previous month days to show
+                const prevMonth = new Date(year, month - 1, 0);
+                const daysInPrevMonth = prevMonth.getDate();
+
+                const today = new Date();
+                const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+                const todayDate = today.getDate();
+
+                let daysHTML = '';
+
+                // Previous month days
+                for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+                    const day = daysInPrevMonth - i;
+                    daysHTML += `<button class="date-picker-day other-month">${day}</button>`;
+                }
+
+                // Current month days
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const currentDate = new Date(year, month, day);
+                    const classes = ['date-picker-day'];
+
+                    // Check if disabled (future date or before min date)
+                    if (this.isDateDisabled(currentDate)) {
+                        classes.push('disabled');
+                    }
+
+                    // Check if today
+                    if (isCurrentMonth && day === todayDate) {
+                        classes.push('today');
+                    }
+
+                    // Check if selected
+                    if (this.selectedDate &&
+                        this.selectedDate.getFullYear() === year &&
+                        this.selectedDate.getMonth() === month &&
+                        this.selectedDate.getDate() === day) {
+                        classes.push('selected');
+                    }
+
+                    daysHTML += `<button class="date-picker-day ${classes.join(' ')}">${day}</button>`;
+                }
+
+                // Next month days to fill the grid
+                const totalCells = Math.ceil((startingDayOfWeek + daysInMonth) / 7) * 7;
+                const remainingCells = totalCells - (startingDayOfWeek + daysInMonth);
+
+                for (let day = 1; day <= remainingCells; day++) {
+                    daysHTML += `<button class="date-picker-day other-month">${day}</button>`;
+                }
+
+                this.daysElement.innerHTML = daysHTML;
+            }
+
+            isDateDisabled(date) {
+                // Disable future dates if maxDate is set
+                if (this.options.maxDate && date > this.options.maxDate) {
+                    return true;
+                }
+
+                // Disable dates before minDate if set
+                if (this.options.minDate && date < this.options.minDate) {
+                    return true;
+                }
+
+                return false;
+            }
+
+            navigateMonth(direction) {
+                this.viewDate.setMonth(this.viewDate.getMonth() + direction);
+                this.renderCalendar();
+            }
+
+            selectDate(date) {
+                if (this.isDateDisabled(date)) return;
+
+                this.selectedDate = new Date(date);
+                this.updateDisplay();
+                this.renderCalendar();
+                this.close();
+
+                // Trigger callback
+                this.options.onSelect(this.selectedDate);
+            }
+
+            selectToday() {
+                const today = new Date();
+                if (!this.isDateDisabled(today)) {
+                    this.selectDate(today);
+                }
+            }
+
+            clear() {
+                this.selectedDate = null;
+                this.updateDisplay();
+                this.renderCalendar();
+                this.close();
+
+                // Trigger callback with null
+                this.options.onSelect(null);
+            }
+
+            setDate(date) {
+                if (date) {
+                    this.selectedDate = new Date(date);
+                    this.viewDate = new Date(date);
+                } else {
+                    this.selectedDate = null;
+                    this.viewDate = new Date();
+                }
+
+                this.updateDisplay();
+                this.renderCalendar();
+            }
+
+            updateDisplay() {
+                if (this.selectedDate) {
+                    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                    this.dateTextElement.textContent = this.selectedDate.toLocaleDateString('en-US', options);
+                } else {
+                    this.dateTextElement.textContent = this.options.placeholder;
+                }
+            }
+
+            toggle() {
+                if (this.isOpen) {
+                    this.close();
+                } else {
+                    this.open();
+                }
+            }
+
+            open() {
+                this.isOpen = true;
+                this.dropdownElement.classList.add('open');
+
+                // On mobile, also show overlay
+                if (window.innerWidth <= 480) {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'date-picker-overlay open';
+                    overlay.addEventListener('click', () => this.close());
+                    document.body.appendChild(overlay);
+                    this.overlay = overlay;
+                }
+            }
+
+            close() {
+                this.isOpen = false;
+                this.dropdownElement.classList.remove('open');
+
+                // Remove mobile overlay
+                if (this.overlay) {
+                    this.overlay.remove();
+                    this.overlay = null;
+                }
+            }
+
+            getValue() {
+                return this.selectedDate ? this.selectedDate.toISOString().split('T')[0] : '';
+            }
+
+            destroy() {
+                if (this.overlay) {
+                    this.overlay.remove();
+                }
+                this.pickerElement.remove();
+            }
+        }
+
+        // Initialize custom date pickers
+        function initCustomDatePickers() {
+            const today = new Date();
+
+            // Initialize update date picker
+            const updateDateContainer = document.getElementById('updateDate');
+            if (updateDateContainer && updateDateContainer.type === 'date' && !datePickers.updateDate) {
+                const parent = updateDateContainer.parentElement;
+                const wrapper = document.createElement('div');
+                parent.insertBefore(wrapper, updateDateContainer);
+                updateDateContainer.style.display = 'none';
+
+                datePickers.updateDate = new CustomDatePicker(wrapper, {
+                    maxDate: today,
+                    defaultDate: today,
+                    placeholder: 'Select update date',
+                    onSelect: (date) => {
+                        updateDateContainer.value = date ? date.toISOString().split('T')[0] : '';
+                        console.log('Update date selected:', date);
+                    }
+                });
+            }
+
+            // Initialize sales date picker
+            const salesDateContainer = document.getElementById('salesDate');
+            if (salesDateContainer && salesDateContainer.type === 'date' && !datePickers.salesDate) {
+                const parent = salesDateContainer.parentElement;
+                const wrapper = document.createElement('div');
+                parent.insertBefore(wrapper, salesDateContainer);
+                salesDateContainer.style.display = 'none';
+
+                datePickers.salesDate = new CustomDatePicker(wrapper, {
+                    maxDate: today,
+                    defaultDate: today,
+                    placeholder: 'Select sales date',
+                    onSelect: (date) => {
+                        salesDateContainer.value = date ? date.toISOString().split('T')[0] : '';
+                        console.log('Sales date selected:', date);
+                    }
+                });
+            }
+
+            // Initialize selected date picker (for sales analytics)
+            const selectedDateContainer = document.getElementById('selectedDate');
+            if (selectedDateContainer && selectedDateContainer.type === 'date' && !datePickers.selectedDate) {
+                const parent = selectedDateContainer.parentElement;
+                const wrapper = document.createElement('div');
+                parent.insertBefore(wrapper, selectedDateContainer);
+                selectedDateContainer.style.display = 'none';
+
+                datePickers.selectedDate = new CustomDatePicker(wrapper, {
+                    maxDate: today,
+                    defaultDate: today,
+                    placeholder: 'Select date',
+                    onSelect: (date) => {
+                        if (date) {
+                            selectedDateContainer.value = date.toISOString().split('T')[0];
+                            selectedSalesDate = new Date(date);
+                            console.log('Selected date changed:', date);
+                        }
+                    }
+                });
+            }
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(initCustomDatePickers, 100);
+        });
+    </script>
+</body>
+</html>
