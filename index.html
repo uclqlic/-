@@ -23,8 +23,8 @@
             <div class="action-buttons single-button">
                 <button class="action-btn update-btn full-width" onclick="toggleUpdateMode()">
                     <span class="material-icons">edit_note</span>
-                    <span>Quick Edit</span>
-                    <span class="btn-subtitle">Edit directly in table</span>
+                    <span>Edit</span>
+                    <span class="btn-subtitle">Edit Inventory Number</span>
                 </button>
             </div>
 
@@ -166,6 +166,7 @@
                     <button class="time-btn active" onclick="switchTimeView('today')">Today</button>
                     <button class="time-btn" onclick="switchTimeView('week')">Week</button>
                     <button class="time-btn" onclick="switchTimeView('month')">Month</button>
+                    <button class="time-btn" onclick="switchTimeView('custom')">Custom</button>
                 </div>
             </header>
 
@@ -309,179 +310,106 @@
                 </div>
 
             </div>
+
+            <!-- Custom Date Query Section -->
+            <div id="customQueryView" class="time-view">
+                <div class="custom-query-container">
+                    <div class="query-header">
+                        <h3>Custom Date Range Query</h3>
+                        <p class="query-subtitle">Select a date range to view sales data</p>
+                    </div>
+                    
+                    <div class="date-range-inputs">
+                        <div class="date-input-group">
+                            <label for="queryStartDate">From Date</label>
+                            <div id="queryStartDatePicker" class="query-date-picker-wrapper"></div>
+                        </div>
+                        <div class="date-input-group">
+                            <label for="queryEndDate">To Date</label>
+                            <div id="queryEndDatePicker" class="query-date-picker-wrapper"></div>
+                        </div>
+                        <button class="query-btn" onclick="executeCustomQuery()">
+                            <span class="material-icons">search</span>
+                            <span>Query</span>
+                        </button>
+                    </div>
+
+                    <!-- Query Results -->
+                    <div id="queryResults" class="query-results" style="display: none;">
+                        <h4 class="results-title">Query Results</h4>
+                        <div class="results-summary">
+                            <div class="result-card">
+                                <span class="result-label">Total Sales</span>
+                                <span class="result-value" id="queryTotalSales">0</span>
+                            </div>
+                            <div class="result-card">
+                                <span class="result-label">Total Revenue</span>
+                                <span class="result-value" id="queryTotalRevenue">ZAR 0</span>
+                            </div>
+                        </div>
+
+                        <!-- Product breakdown table -->
+                        <div class="product-breakdown">
+                            <h5>Product Breakdown</h5>
+                            <div class="breakdown-table-container">
+                                <table class="breakdown-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Model</th>
+                                            <th>Units Sold</th>
+                                            <th>Revenue</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="queryBreakdownBody">
+                                        <!-- Dynamic content -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Personal页面 -->
         <div id="personalPage" class="page">
-            <header class="personal-header">
-                <h2>Personal Center</h2>
-                <p class="personal-subtitle">Product Attributes Management</p>
-            </header>
-
-            <div class="personal-content">
-                <!-- Update Stock Section (First) -->
-                <div class="section-card">
-                    <div class="section-header">
-                        <div class="section-icon">
-                            <span class="material-icons">inventory_2</span>
-                        </div>
-                        <div>
-                            <h3 class="section-title">Update Stock</h3>
-                            <p class="section-description">Record inventory updates and sales</p>
-                        </div>
-                    </div>
-                    <button class="action-link" onclick="showUnifiedForm()">
-                        <span>Update Inventory</span>
-                        <span class="material-icons">arrow_forward</span>
+            <div class="personal-page-content">
+                <!-- 操作按钮区 -->
+                <div class="action-buttons single-button">
+                    <button class="action-btn update-btn full-width" onclick="togglePersonalEditMode()">
+                        <span class="material-icons">edit_note</span>
+                        <span>Edit</span>
+                        <span class="btn-subtitle">Edit product information</span>
                     </button>
                 </div>
 
-                <!-- Product Attributes Section -->
-                <div class="section-card product-attributes-section">
-                    <div class="section-header">
-                        <div class="section-icon">
-                            <span class="material-icons">category</span>
+                <!-- Product Management Table -->
+                <div class="inventory-table-container">
+                    <div class="table-header">
+                        <h2>Product Management</h2>
+                        <div class="header-actions">
+                            <button class="export-btn" onclick="exportProductData()">
+                                <span class="material-icons">file_download</span>
+                                <span>Export</span>
+                            </button>
                         </div>
-                        <div>
-                            <h3 class="section-title">Product Management</h3>
-                            <p class="section-description">Manage product models and attributes</p>
-                        </div>
-                        <button class="add-model-btn" onclick="showAddModelDialog()" title="Add new model">
-                            <span class="material-icons">add</span>
-                            <span>Add Model</span>
-                        </button>
                     </div>
-
-                    <!-- Product Table -->
-                    <div class="product-table-container">
-                        <table class="product-management-table">
+                    <div class="inventory-table-wrapper">
+                        <table class="inventory-table">
                             <thead>
                                 <tr>
-                                    <th>Product Model</th>
+                                    <th>Model</th>
+                                    <th>Price</th>
                                     <th>Status</th>
                                     <th>Category</th>
-                                    <th>Actions</th>
+                                    <th>Sales</th>
+                                    <th>Safety Stock</th>
                                 </tr>
                             </thead>
-                            <tbody id="productTableBody">
-                                <!-- Will be populated dynamically -->
+                            <tbody id="personalTableBody">
+                                <!-- 数据由JavaScript动态生成 -->
                             </tbody>
                         </table>
-                    </div>
-                </div>
-
-                <!-- Price Management Section -->
-                <div class="section-card">
-                    <div class="section-header">
-                        <div class="section-icon">
-                            <span class="material-icons">payments</span>
-                        </div>
-                        <div>
-                            <h3 class="section-title">Price Settings</h3>
-                            <p class="section-description">Manage product pricing</p>
-                        </div>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="save-prices-btn" onclick="savePriceChanges()" style="display: none;">
-                                <span class="material-icons">save</span>
-                                <span>Save Changes</span>
-                            </button>
-                            <button class="add-model-btn" onclick="showAddModelDialog()" title="Add new model">
-                                <span class="material-icons">add</span>
-                                <span>Add Model</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Price Table -->
-                    <div class="price-table-container">
-                        <table class="price-management-table">
-                            <thead>
-                                <tr>
-                                    <th>Product Model</th>
-                                    <th>Price (ZAR)</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="priceTableBody">
-                                <!-- Will be populated dynamically -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Safety Stock Settings Section -->
-                <div class="section-card">
-                    <div class="section-header">
-                        <div class="section-icon">
-                            <span class="material-icons">warning</span>
-                        </div>
-                        <div>
-                            <h3 class="section-title">Safety Stock Settings</h3>
-                            <p class="section-description">Set custom minimum stock levels</p>
-                        </div>
-                    </div>
-                    <button class="action-link" onclick="editSafetyStock()">
-                        <span>Edit Safety Stock</span>
-                        <span class="material-icons">arrow_forward</span>
-                    </button>
-                </div>
-
-                <!-- Custom Date Query Section -->
-                <div class="section-card">
-                    <div class="section-header">
-                        <div class="section-icon">
-                            <span class="material-icons">query_stats</span>
-                        </div>
-                        <div>
-                            <h3 class="section-title">Custom Date Query</h3>
-                            <p class="section-description">View sales data from selected date</p>
-                        </div>
-                    </div>
-                    <div class="date-query-container">
-                        <div class="date-range-inputs">
-                            <div class="date-input-group">
-                                <label for="queryDate">Select Date</label>
-                                <input type="date" id="queryDate" class="query-date-input">
-                            </div>
-                            <button class="query-btn" onclick="executeCustomQuery()">
-                                <span class="material-icons">search</span>
-                                <span>Query</span>
-                            </button>
-                        </div>
-
-                        <!-- Query Results -->
-                        <div id="queryResults" class="query-results" style="display: none;">
-                            <h4 class="results-title">Query Results</h4>
-                            <div class="results-summary">
-                                <div class="result-card">
-                                    <span class="result-label">Total Sales</span>
-                                    <span class="result-value" id="queryTotalSales">0</span>
-                                </div>
-                                <div class="result-card">
-                                    <span class="result-label">Total Revenue</span>
-                                    <span class="result-value" id="queryTotalRevenue">ZAR 0</span>
-                                </div>
-                            </div>
-
-                            <!-- Product breakdown table -->
-                            <div class="product-breakdown">
-                                <h5>Product Breakdown</h5>
-                                <div class="breakdown-table-container">
-                                    <table class="breakdown-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Model</th>
-                                                <th>Units Sold</th>
-                                                <th>Revenue</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="queryBreakdownBody">
-                                            <!-- Dynamic content -->
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
 

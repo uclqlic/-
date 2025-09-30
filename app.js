@@ -1091,11 +1091,26 @@ function showPage(page) {
 function switchTimeView(view) {
     // Update button states
     document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
+    
+    // Find and activate the clicked button
+    const clickedBtn = Array.from(document.querySelectorAll('.time-btn')).find(
+        btn => btn.textContent.toLowerCase() === view.toLowerCase()
+    );
+    if (clickedBtn) {
+        clickedBtn.classList.add('active');
+    }
 
     // Update view visibility
     document.querySelectorAll('.time-view').forEach(v => v.classList.remove('active'));
-    document.getElementById(view + 'View').classList.add('active');
+    const targetView = document.getElementById(view + 'QueryView');
+    if (targetView) {
+        targetView.classList.add('active');
+    } else {
+        const fallbackView = document.getElementById(view + 'View');
+        if (fallbackView) {
+            fallbackView.classList.add('active');
+        }
+    }
 
     // Keep Add Sales button visible in all views
     const addSalesBtn = document.getElementById('addSalesBtn');
@@ -1110,6 +1125,8 @@ function switchTimeView(view) {
         loadWeekData();
     } else if (view === 'month') {
         loadMonthData();
+    } else if (view === 'custom') {
+        loadCustomQueryView();
     }
 }
 
@@ -1783,57 +1800,407 @@ document.addEventListener('keydown', function(e) {
 
 // Load Personal Page
 function loadPersonalPage() {
+    // Populate personal table with all product data
+    renderPersonalTable();
+}
+
+// Load Custom Query View
+function loadCustomQueryView() {
     // Initialize date query section
     initializeDateQuery();
-
-    // Populate product table
-    const productTableBody = document.getElementById('productTableBody');
-    if (productTableBody) {
-        // Clear table
-        productTableBody.innerHTML = '';
-
-        // Add rows for each model
-        models.forEach(model => {
-            const attrs = productAttributes[model] || { status: 'usual', category: 'non-push' };
-
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td style="font-weight: 500;">${model}</td>
-                <td>
-                    <div style="display: flex; align-items: center;">
-                        <span class="toggle-label">${attrs.status === 'usual' ? 'Usual' : 'Clean'}</span>
-                        <label class="table-toggle">
-                            <input type="checkbox"
-                                   ${attrs.status === 'clean' ? 'checked' : ''}
-                                   onchange="updateTableAttribute('${model}', 'status', this.checked)">
-                            <span class="table-toggle-slider"></span>
-                        </label>
-                    </div>
-                </td>
-                <td>
-                    <div style="display: flex; align-items: center;">
-                        <span class="toggle-label">${attrs.category === 'non-push' ? 'Non-Push' : 'Push'}</span>
-                        <label class="table-toggle">
-                            <input type="checkbox"
-                                   ${attrs.category === 'push' ? 'checked' : ''}
-                                   onchange="updateTableAttribute('${model}', 'category', this.checked)">
-                            <span class="table-toggle-slider"></span>
-                        </label>
-                    </div>
-                </td>
-                <td>
-                    <button class="delete-model-btn" onclick="deleteModel('${model}')" title="Delete model">
-                        <span class="material-icons">delete</span>
-                    </button>
-                </td>
-            `;
-
-            productTableBody.appendChild(row);
-        });
+    
+    // Hide query results initially
+    const queryResults = document.getElementById('queryResults');
+    if (queryResults) {
+        queryResults.style.display = 'none';
     }
+}
 
-    // Populate price table
-    loadPriceTable();
+// Render Personal Table
+function renderPersonalTable() {
+    const tbody = document.getElementById('personalTableBody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    models.forEach(model => {
+        const attrs = productAttributes[model] || { status: 'usual', category: 'non-push' };
+        const price = productPrices[model] || 0;
+        const stock = inventoryData[model]?.quantity || 0;
+        const safetyStock = inventoryData[model]?.safetyStock || 20;
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${model}</td>
+            <td class="editable-price" data-model="${model}">${price || ''}</td>
+            <td class="editable-status" data-model="${model}">${attrs.status === 'usual' ? 'Usual' : 'Clean'}</td>
+            <td class="editable-category" data-model="${model}">${attrs.category === 'push' ? 'Push' : 'Non-Push'}</td>
+            <td>
+                <button class="view-sales-btn" onclick="viewModelSales('${model}')" title="View sales details">
+                    <span class="material-icons">visibility</span>
+                </button>
+            </td>
+            <td class="editable-safety" data-model="${model}">${safetyStock}</td>
+        `;
+
+        tbody.appendChild(row);
+    });
+}
+
+// Toggle Personal Edit Mode
+let personalEditMode = false;
+function togglePersonalEditMode() {
+    personalEditMode = !personalEditMode;
+    const editBtn = document.querySelector('#personalPage .update-btn');
+    
+    if (personalEditMode) {
+        // Enter edit mode
+        editBtn.innerHTML = `
+            <span class="material-icons">save</span>
+            <span>Save</span>
+            <span class="btn-subtitle">Save changes</span>
+        `;
+        
+        // Make cells editable
+        makePersonalTableEditable();
+        
+        // Add add button
+        const tbody = document.getElementById('personalTableBody');
+        const addRow = document.createElement('tr');
+        addRow.id = 'addNewModelRow';
+        addRow.innerHTML = `
+            <td colspan="7" style="text-align: center;">
+                <button class="add-model-btn" onclick="addNewModelFromTable()" style="width: auto; padding: 8px 16px;">
+                    <span class="material-icons">add</span>
+                    <span>Add New Model</span>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(addRow);
+    } else {
+        // Exit edit mode - save changes
+        savePersonalChanges();
+        
+        editBtn.innerHTML = `
+            <span class="material-icons">edit_note</span>
+            <span>Edit</span>
+            <span class="btn-subtitle">Edit product information</span>
+        `;
+        
+        // Remove add button row
+        const addRow = document.getElementById('addNewModelRow');
+        if (addRow) addRow.remove();
+        
+        // Remove Actions header
+        const actionsHeader = document.querySelector('#personalTableBody').closest('table').querySelector('th.actions-header');
+        if (actionsHeader) actionsHeader.remove();
+        
+        // Remove all action cells
+        document.querySelectorAll('#personalTableBody tr').forEach(row => {
+            if (row.cells.length > 6) {
+                row.deleteCell(6); // Remove the last cell (Actions)
+            }
+        });
+        
+        // Refresh table
+        renderPersonalTable();
+    }
+}
+
+// Make Personal Table Editable
+function makePersonalTableEditable() {
+    // First, add Actions header if not exists
+    const thead = document.querySelector('#personalTableBody').closest('table').querySelector('thead tr');
+    if (!thead.querySelector('th.actions-header')) {
+        const actionsHeader = document.createElement('th');
+        actionsHeader.textContent = 'Actions';
+        actionsHeader.className = 'actions-header';
+        thead.appendChild(actionsHeader);
+    }
+    
+    // Make price cells editable
+    document.querySelectorAll('.editable-price').forEach(cell => {
+        const model = cell.dataset.model;
+        const value = cell.textContent;
+        cell.innerHTML = `<input type="number" value="${value}" class="inline-edit" data-model="${model}" data-field="price" min="0" step="100">`;
+    });
+    
+    // Make status cells editable
+    document.querySelectorAll('.editable-status').forEach(cell => {
+        const model = cell.dataset.model;
+        const value = cell.textContent;
+        const isClean = value === 'Clean';
+        cell.innerHTML = `
+            <label class="table-toggle" style="margin: 0;">
+                <input type="checkbox" ${isClean ? 'checked' : ''} data-model="${model}" data-field="status">
+                <span class="table-toggle-slider"></span>
+            </label>
+            <span style="margin-left: 8px;">${value}</span>
+        `;
+    });
+    
+    // Make category cells editable
+    document.querySelectorAll('.editable-category').forEach(cell => {
+        const model = cell.dataset.model;
+        const value = cell.textContent;
+        const isPush = value === 'Push';
+        cell.innerHTML = `
+            <label class="table-toggle" style="margin: 0;">
+                <input type="checkbox" ${isPush ? 'checked' : ''} data-model="${model}" data-field="category">
+                <span class="table-toggle-slider"></span>
+            </label>
+            <span style="margin-left: 8px;">${value}</span>
+        `;
+    });
+    
+    // Make safety stock cells editable
+    document.querySelectorAll('.editable-safety').forEach(cell => {
+        const model = cell.dataset.model;
+        const value = cell.textContent;
+        cell.innerHTML = `<input type="number" value="${value}" class="inline-edit" data-model="${model}" data-field="safety" min="0" step="1">`;
+    });
+    
+    // Add delete buttons as new column
+    document.querySelectorAll('#personalTableBody tr').forEach(row => {
+        const model = row.cells[0].textContent;
+        const deleteCell = document.createElement('td');
+        deleteCell.innerHTML = `
+            <button class="delete-model-btn" onclick="deleteModelFromTable('${model}')" title="Delete model">
+                <span class="material-icons">delete</span>
+            </button>
+        `;
+        row.appendChild(deleteCell);
+    });
+}
+
+// Save Personal Changes
+function savePersonalChanges() {
+    // Save price changes
+    document.querySelectorAll('input[data-field="price"]').forEach(input => {
+        const model = input.dataset.model;
+        const value = parseFloat(input.value) || 0;
+        productPrices[model] = value;
+    });
+    
+    // Save status changes
+    document.querySelectorAll('input[data-field="status"]').forEach(input => {
+        const model = input.dataset.model;
+        if (!productAttributes[model]) {
+            productAttributes[model] = { status: 'usual', category: 'non-push' };
+        }
+        productAttributes[model].status = input.checked ? 'clean' : 'usual';
+    });
+    
+    // Save category changes
+    document.querySelectorAll('input[data-field="category"]').forEach(input => {
+        const model = input.dataset.model;
+        if (!productAttributes[model]) {
+            productAttributes[model] = { status: 'usual', category: 'non-push' };
+        }
+        productAttributes[model].category = input.checked ? 'push' : 'non-push';
+    });
+    
+    // Save safety stock changes
+    document.querySelectorAll('input[data-field="safety"]').forEach(input => {
+        const model = input.dataset.model;
+        const value = parseInt(input.value) || 20;
+        if (!inventoryData[model]) {
+            inventoryData[model] = { quantity: 0, safetyStock: 20 };
+        }
+        inventoryData[model].safetyStock = value;
+    });
+    
+    // Save all data to localStorage
+    saveProductPrices();
+    saveProductAttributes();
+    saveData();
+    
+    // Update inventory table if visible
+    renderInventoryTable();
+    
+    showAlert('All changes saved successfully', 'Success', 'check_circle');
+}
+
+// Delete Model From Table
+function deleteModelFromTable(model) {
+    if (!confirm(`Are you sure you want to delete model ${model}? This will remove all data for this model.`)) {
+        return;
+    }
+    
+    // Remove from models array
+    const index = models.indexOf(model);
+    if (index > -1) {
+        models.splice(index, 1);
+    }
+    
+    // Remove all related data
+    delete inventoryData[model];
+    delete productAttributes[model];
+    delete productPrices[model];
+    
+    // Remove sales history for this model
+    salesHistory = salesHistory.filter(sale => sale.model !== model);
+    
+    // Save all data
+    saveData();
+    saveProductAttributes();
+    saveProductPrices();
+    
+    // Remove the row from table
+    const row = event.target.closest('tr');
+    if (row) row.remove();
+}
+
+// Add New Model From Table
+function addNewModelFromTable() {
+    const newModel = prompt('Enter new model name:');
+    if (!newModel) return;
+    
+    const modelName = newModel.trim().toUpperCase();
+    
+    if (models.includes(modelName)) {
+        showAlert('This model already exists', 'Error', 'error');
+        return;
+    }
+    
+    // Add to models array
+    models.push(modelName);
+    
+    // Initialize with default values
+    inventoryData[modelName] = { quantity: 0, safetyStock: 20 };
+    productAttributes[modelName] = { status: 'usual', category: 'non-push' };
+    productPrices[modelName] = 0;
+    
+    // Save data
+    saveData();
+    saveProductAttributes();
+    saveProductPrices();
+    
+    // Refresh table in edit mode
+    renderPersonalTable();
+    makePersonalTableEditable();
+    
+    // Re-add the add button row
+    const tbody = document.getElementById('personalTableBody');
+    const addRow = document.createElement('tr');
+    addRow.id = 'addNewModelRow';
+    addRow.innerHTML = `
+        <td colspan="7" style="text-align: center;">
+            <button class="add-model-btn" onclick="addNewModelFromTable()" style="width: auto; padding: 8px 16px;">
+                <span class="material-icons">add</span>
+                <span>Add New Model</span>
+            </button>
+        </td>
+    `;
+    tbody.appendChild(addRow);
+}
+
+// View Model Sales (眼睛按钮功能)
+function viewModelSales(model) {
+    // Create a popup dialog to show sales data
+    const dialog = document.createElement('div');
+    dialog.className = 'sales-popup-overlay show';
+    dialog.innerHTML = `
+        <div class="sales-popup-dialog">
+            <div class="sales-popup-icon">
+                <span class="material-icons">bar_chart</span>
+            </div>
+            <h2 class="sales-popup-title">Sales Data for ${model}</h2>
+            
+            <div class="sales-period-buttons">
+                <button class="period-btn active" onclick="updateSalesView(this, '${model}', 1)">1 Day</button>
+                <button class="period-btn" onclick="updateSalesView(this, '${model}', 7)">7 Days</button>
+                <button class="period-btn" onclick="updateSalesView(this, '${model}', 14)">2 Weeks</button>
+                <button class="period-btn" onclick="updateSalesView(this, '${model}', 30)">1 Month</button>
+            </div>
+            
+            <div id="salesDataContent" class="sales-data-display">
+                <span class="sales-number">${getSalesForPeriod(model, 1)}</span>
+                <span class="sales-unit">units</span>
+            </div>
+            
+            <button class="sales-close-btn" onclick="closeSalesDialog(this)">Close</button>
+        </div>
+    `;
+    
+    document.body.appendChild(dialog);
+}
+
+// Update Sales View
+function updateSalesView(btn, model, days) {
+    // Update button states
+    btn.parentElement.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    // Update content
+    const content = document.getElementById('salesDataContent');
+    const units = getSalesForPeriod(model, days);
+    content.innerHTML = `
+        <span class="sales-number">${units}</span>
+        <span class="sales-unit">units</span>
+    `;
+}
+
+// Get Sales For Period
+function getSalesForPeriod(model, days) {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - days + 1);
+    
+    let totalUnits = 0;
+    salesHistory.forEach(sale => {
+        if (sale.model === model) {
+            const saleDate = new Date(sale.date);
+            if (saleDate >= startDate && saleDate <= endDate) {
+                totalUnits += sale.quantity;
+            }
+        }
+    });
+    
+    return totalUnits;
+}
+
+// Close Sales Dialog
+function closeSalesDialog(btn) {
+    const dialog = btn.closest('.sales-popup-overlay');
+    dialog.remove();
+}
+
+// Export Product Data
+function exportProductData() {
+    const data = [];
+    
+    models.forEach(model => {
+        const attrs = productAttributes[model] || { status: 'usual', category: 'non-push' };
+        const price = productPrices[model] || 0;
+        const safetyStock = inventoryData[model]?.safetyStock || 20;
+        const sales1D = getSalesForPeriod(model, 1);
+        
+        data.push({
+            Model: model,
+            Price: price,
+            Status: attrs.status === 'usual' ? 'Usual' : 'Clean',
+            Category: attrs.category === 'push' ? 'Push' : 'Non-Push',
+            'Sales (1D)': sales1D,
+            'Safety Stock': safetyStock
+        });
+    });
+    
+    // Convert to CSV
+    const headers = Object.keys(data[0]);
+    const csv = [
+        headers.join(','),
+        ...data.map(row => headers.map(header => row[header]).join(','))
+    ].join('\n');
+    
+    // Download
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `product_data_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
 }
 
 // Load price table
@@ -2855,22 +3222,21 @@ function setDefaultDatesCustom() {
 
 // Custom Date Query Function
 function executeCustomQuery() {
-    const queryDate = document.getElementById('queryDate').value;
+    // Use the query date variables directly
+    const startDate = new Date(queryStartDate);
+    const endDate = new Date(queryEndDate);
+    endDate.setHours(23, 59, 59, 999);
 
-    if (!queryDate) {
-        showAlert('Please select a date', 'Required Field', 'warning');
+    // Validate date range
+    if (startDate > endDate) {
+        showAlert('Start date must be before or equal to end date', 'Invalid Date Range', 'warning');
         return;
     }
 
-    // Get the selected date and create a date range for that entire day
-    const startDate = new Date(queryDate);
-    const endDate = new Date(queryDate);
-    endDate.setHours(23, 59, 59, 999);
-
-    // Filter sales history for the selected date
+    // Filter sales history for the selected date range
     const filteredSales = salesHistory.filter(sale => {
         const saleDate = new Date(sale.date);
-        return saleDate.toDateString() === startDate.toDateString();
+        return saleDate >= startDate && saleDate <= endDate;
     });
 
     // Calculate totals
@@ -2881,7 +3247,8 @@ function executeCustomQuery() {
     filteredSales.forEach(sale => {
         sale.items.forEach(item => {
             totalUnits += item.quantity;
-            const itemRevenue = item.quantity * (item.price || 0);
+            const price = productPrices[item.model] || 0;
+            const itemRevenue = item.quantity * price;
             totalRevenue += itemRevenue;
 
             // Aggregate by product
@@ -2931,25 +3298,66 @@ function executeCustomQuery() {
 
     // Set date display
     const dateOptions = { year: 'numeric', month: 'short', day: 'numeric' };
-    const formattedDate = new Date(queryDate).toLocaleDateString('en-US', dateOptions);
+    const formattedStartDate = startDate.toLocaleDateString('en-US', dateOptions);
+    const formattedEndDate = endDate.toLocaleDateString('en-US', dateOptions);
 
     const resultsTitle = document.querySelector('.results-title');
     if (resultsTitle) {
-        resultsTitle.textContent = `Query Results: ${formattedDate}`;
+        if (startDate.toDateString() === endDate.toDateString()) {
+            resultsTitle.textContent = `Query Results: ${formattedStartDate}`;
+        } else {
+            resultsTitle.textContent = `Query Results: ${formattedStartDate} - ${formattedEndDate}`;
+        }
     }
 }
 
 // Initialize date input for query
 function initializeDateQuery() {
     const today = new Date();
-
-    const queryInput = document.getElementById('queryDate');
-    if (queryInput) {
-        queryInput.value = today.toISOString().split('T')[0];
-        queryInput.max = today.toISOString().split('T')[0];
-
-        // Initialize custom date picker for query date
-        initQueryDatePicker();
+    
+    // Initialize the date variables
+    queryStartDate = new Date(today);
+    queryEndDate = new Date(today);
+    
+    // Initialize custom date pickers for query dates
+    const startDateContainer = document.getElementById('queryStartDatePicker');
+    const endDateContainer = document.getElementById('queryEndDatePicker');
+    
+    if (startDateContainer && !datePickers.queryStartDate) {
+        datePickers.queryStartDate = new CustomDatePicker(startDateContainer, {
+            maxDate: today,
+            defaultDate: queryStartDate,
+            placeholder: 'Select start date',
+            onSelect: (date) => {
+                if (date) {
+                    queryStartDate = new Date(date);
+                    // Ensure end date is not before start date
+                    if (queryEndDate < queryStartDate) {
+                        queryEndDate = new Date(queryStartDate);
+                        datePickers.queryEndDate.setDate(queryEndDate);
+                    }
+                }
+            }
+        });
+    }
+    
+    if (endDateContainer && !datePickers.queryEndDate) {
+        datePickers.queryEndDate = new CustomDatePicker(endDateContainer, {
+            maxDate: today,
+            defaultDate: queryEndDate,
+            placeholder: 'Select end date',
+            onSelect: (date) => {
+                if (date) {
+                    // Ensure end date is not before start date
+                    if (date < queryStartDate) {
+                        showAlert('End date cannot be before start date', 'Invalid Date', 'warning');
+                        datePickers.queryEndDate.setDate(queryEndDate);
+                        return;
+                    }
+                    queryEndDate = new Date(date);
+                }
+            }
+        });
     }
 }
 
@@ -2979,3 +3387,7 @@ function initQueryDatePicker() {
 
 // Initialize date pickers when the page loads
 // Note: This is also called during DOM initialization and form mode switches
+
+// Custom Date Query date picker variables
+let queryStartDate = new Date();
+let queryEndDate = new Date();
