@@ -279,7 +279,8 @@ function renderInventoryTable() {
             row.className = rowClass;
         }
 
-        const periodSales = calculatePeriodSales(model);
+        // Calculate sales for the period (use safetyStockDays)
+        const periodSales = getSalesForPeriod(model, safetyStockDays);
 
         row.innerHTML = `
             <td class="model-cell" ${isEditMode ? 'contenteditable="true"' : ''}
@@ -292,12 +293,7 @@ function renderInventoryTable() {
             </td>
             <td class="safety-cell" ${isEditMode ? 'contenteditable="true"' : ''}
                 onblur="updateSafetyStock('${model}', this.textContent)">${data.safetyStock}</td>
-            <td class="sales-period-cell ${isEditMode ? 'editable' : ''}" data-model="${model}">
-                ${isEditMode ?
-                    `<input type="number" class="sales-input" value="${periodSales}" min="0" onchange="updatePeriodSales('${model}', this.value)">` :
-                    periodSales
-                }
-            </td>
+            <td class="sales-period-cell">${periodSales}</td>
             <td>${statusBadge}</td>
             ${isEditMode ? `<td class="action-cell">
                 <button class="delete-row-btn" onclick="deleteRow('${model}')">
@@ -2149,11 +2145,14 @@ function getSalesForPeriod(model, days) {
     
     let totalUnits = 0;
     salesHistory.forEach(sale => {
-        if (sale.model === model) {
-            const saleDate = new Date(sale.date);
-            if (saleDate >= startDate && saleDate <= endDate) {
-                totalUnits += sale.quantity;
-            }
+        const saleDate = new Date(sale.date);
+        if (saleDate >= startDate && saleDate <= endDate) {
+            // 遍历sale.items数组
+            sale.items.forEach(item => {
+                if (item.model === model) {
+                    totalUnits += item.quantity;
+                }
+            });
         }
     });
     
