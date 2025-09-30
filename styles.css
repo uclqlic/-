@@ -1444,6 +1444,30 @@ body {
     background: var(--white);
 }
 
+/* Personal page price input specific style */
+.editable-price .inline-edit,
+input[data-field="price"].inline-edit {
+    min-width: 80px;
+    max-width: 90px;
+    padding: 6px 8px;
+}
+
+/* Personal page table column widths */
+#personalPage .inventory-table th:nth-child(1),
+#personalPage .inventory-table td:nth-child(1) { width: 25%; } /* Model */
+#personalPage .inventory-table th:nth-child(2),
+#personalPage .inventory-table td:nth-child(2) { width: 15%; } /* Price - reduced width */
+#personalPage .inventory-table th:nth-child(3),
+#personalPage .inventory-table td:nth-child(3) { width: 12%; } /* Status */
+#personalPage .inventory-table th:nth-child(4),
+#personalPage .inventory-table td:nth-child(4) { width: 15%; } /* Category */
+#personalPage .inventory-table th:nth-child(5),
+#personalPage .inventory-table td:nth-child(5) { width: 10%; } /* Sales */
+#personalPage .inventory-table th:nth-child(6),
+#personalPage .inventory-table td:nth-child(6) { width: 15%; } /* Safety Stock */
+#personalPage .inventory-table th:nth-child(7),
+#personalPage .inventory-table td:nth-child(7) { width: 8%; } /* Actions */
+
 .inline-edit:focus {
     outline: none;
     border-color: var(--primary-color);
@@ -1971,8 +1995,8 @@ body {
 
 /* Price input field */
 .price-input-field {
-    width: 120px;
-    padding: 6px 10px;
+    width: 200px;
+    padding: 10px 14px;
     border: 1px solid #E5E7EB;
     border-radius: 6px;
     font-size: 14px;
