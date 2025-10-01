@@ -56,6 +56,7 @@
                     </table>
                 </div>
             </div>
+            
         </div>
 
         <!-- 统一数据录入表单 -->
@@ -153,23 +154,30 @@
 
         <!-- Sales页面 -->
         <div id="salesPage" class="page">
-            <!-- Sales header -->
-            <header class="sales-header">
-                <div class="header-top">
-                    <h2>Sales Analytics</h2>
-                    <button class="add-sales-btn" onclick="openSalesFormFromAnalytics()" id="addSalesBtn">
-                        <span class="material-icons">add</span>
-                        <span class="btn-text">Add Sales</span>
-                    </button>
-                </div>
-                <div class="time-filters">
-                    <button class="time-btn active" onclick="switchTimeView('today')">Today</button>
-                    <button class="time-btn" onclick="switchTimeView('week')">Week</button>
-                    <button class="time-btn" onclick="switchTimeView('month')">Month</button>
-                    <button class="time-btn" onclick="switchTimeView('custom')">Custom</button>
-                </div>
-            </header>
+            <!-- 操作按钮区 -->
+            <div class="action-buttons single-button">
+                <button class="action-btn update-btn full-width" onclick="openSalesFormFromAnalytics()" id="addSalesBtn">
+                    <span class="material-icons">add</span>
+                    <span>Add Sales</span>
+                    <span class="btn-subtitle">Add new sales data</span>
+                </button>
+            </div>
 
+            <!-- Sales Analytics Container -->
+            <div class="inventory-table-container">
+                <div class="table-header">
+                    <h2>Sales Analytics</h2>
+                    <div class="header-actions">
+                        <div class="time-filters">
+                            <button class="time-btn active" onclick="switchTimeView('today')">Today</button>
+                            <button class="time-btn" onclick="switchTimeView('week')">Week</button>
+                            <button class="time-btn" onclick="switchTimeView('month')">Month</button>
+                            <button class="time-btn" onclick="switchTimeView('custom')">Custom</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                
             <!-- Today View -->
             <div id="todayView" class="time-view active">
                 <div class="stats-cards">
@@ -369,6 +377,7 @@
                     </div>
                 </div>
             </div>
+            
         </div>
 
         <!-- Personal页面 -->
@@ -414,6 +423,7 @@
                 </div>
 
             </div>
+            
         </div>
 
         <!-- 底部导航 -->

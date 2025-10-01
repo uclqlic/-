@@ -111,14 +111,28 @@ function addTestSalesData() {
         date.setDate(today.getDate() - i);
         const dateStr = date.toISOString().split('T')[0];
 
-        // Random sales for each day
+        // Random sales for each day - include ALL models
+        const dailyItems = [];
+        models.forEach(model => {
+            // Random chance (60%) of having sales for each model
+            if (Math.random() < 0.6) {
+                const quantity = Math.floor(Math.random() * 3) + 1;
+                dailyItems.push({ model: model, quantity: quantity });
+            }
+        });
+
+        // Ensure at least some sales each day
+        if (dailyItems.length === 0) {
+            // Add at least 3 random models
+            const randomModels = [...models].sort(() => Math.random() - 0.5).slice(0, 3);
+            randomModels.forEach(model => {
+                dailyItems.push({ model: model, quantity: Math.floor(Math.random() * 2) + 1 });
+            });
+        }
+
         testSales.push({
             date: dateStr,
-            items: [
-                { model: "75X8700G", quantity: Math.floor(Math.random() * 3) + 1 },
-                { model: "65X8500G", quantity: Math.floor(Math.random() * 2) + 1 },
-                { model: "55Q6600H", quantity: Math.floor(Math.random() * 2) + 1 }
-            ].filter(item => item.quantity > 0)
+            items: dailyItems
         });
     }
 
@@ -324,11 +338,18 @@ function renderInventoryTable() {
 // Toggle edit mode
 function toggleUpdateMode() {
     isEditMode = !isEditMode;
-    const btn = document.querySelector('.update-btn');
+    const btn = document.querySelector('#homePage .update-btn');
     const thead = document.querySelector('.inventory-table thead tr');
 
     if (isEditMode) {
         btn.classList.add('active');
+        // Update button text to Save
+        btn.innerHTML = `
+            <span class="material-icons">save</span>
+            <span>Save</span>
+            <span class="btn-subtitle">Save changes</span>
+        `;
+        
         // Add action column header
         if (!document.getElementById('action-header')) {
             const th = document.createElement('th');
@@ -339,6 +360,13 @@ function toggleUpdateMode() {
         renderInventoryTable();
     } else {
         btn.classList.remove('active');
+        // Update button text back to Edit
+        btn.innerHTML = `
+            <span class="material-icons">edit_note</span>
+            <span>Edit</span>
+            <span class="btn-subtitle">Edit Inventory Number</span>
+        `;
+        
         // Remove action column header
         const actionHeader = document.getElementById('action-header');
         if (actionHeader) {
@@ -1047,9 +1075,12 @@ function showPage(page) {
         // Update page title
         if (pageTitle) pageTitle.textContent = 'Inventory Management';
 
-        // Update navigation bar status
-        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.nav-btn')[1].classList.add('active');
+        // Update bottom navigation bar status
+        const bottomNav = document.querySelector('.bottom-nav');
+        if (bottomNav) {
+            bottomNav.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            bottomNav.querySelectorAll('.nav-btn')[1].classList.add('active'); // Home button
+        }
     } else if (page === 'sales' || page === 'salesHistory') {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById('salesPage').classList.add('active');
@@ -1057,9 +1088,12 @@ function showPage(page) {
         // Update page title
         if (pageTitle) pageTitle.textContent = 'Sales History';
 
-        // Update navigation bar status
-        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.nav-btn')[0].classList.add('active');
+        // Update bottom navigation bar status
+        const bottomNav = document.querySelector('.bottom-nav');
+        if (bottomNav) {
+            bottomNav.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            bottomNav.querySelectorAll('.nav-btn')[0].classList.add('active'); // Sales button
+        }
 
         // Initialize date picker with today's date
         selectedSalesDate = new Date();
@@ -1074,9 +1108,12 @@ function showPage(page) {
         // Update page title
         if (pageTitle) pageTitle.textContent = 'Inventory Management';
 
-        // Update navigation
-        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.nav-btn')[2].classList.add('active');
+        // Update bottom navigation bar status
+        const bottomNav = document.querySelector('.bottom-nav');
+        if (bottomNav) {
+            bottomNav.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            bottomNav.querySelectorAll('.nav-btn')[2].classList.add('active'); // Personal button
+        }
 
         // Load personal page data
         loadPersonalPage();
@@ -2013,8 +2050,6 @@ function savePersonalChanges() {
     
     // Update inventory table if visible
     renderInventoryTable();
-    
-    showAlert('All changes saved successfully', 'Success', 'check_circle');
 }
 
 // Delete Model From Table
@@ -2140,12 +2175,16 @@ function updateSalesView(btn, model, days) {
 // Get Sales For Period
 function getSalesForPeriod(model, days) {
     const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999); // End of day
+    
     const startDate = new Date();
     startDate.setDate(endDate.getDate() - days + 1);
+    startDate.setHours(0, 0, 0, 0); // Start of day
     
     let totalUnits = 0;
     salesHistory.forEach(sale => {
-        const saleDate = new Date(sale.date);
+        const saleDate = new Date(sale.date + 'T12:00:00'); // Add time to avoid timezone issues
+        
         if (saleDate >= startDate && saleDate <= endDate) {
             // 遍历sale.items数组
             sale.items.forEach(item => {
