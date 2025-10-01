@@ -2951,6 +2951,36 @@ input:checked + .toggle-slider:before {
     margin: 0;
 }
 
+/* Add Sales Compact Button */
+.add-sales-compact-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: var(--white);
+    color: var(--primary-purple);
+    border: 2px solid var(--primary-purple);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.add-sales-compact-btn:hover {
+    background: var(--primary-purple);
+    color: var(--white);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(124, 58, 237, 0.2);
+}
+
+.add-sales-compact-btn:active {
+    transform: translateY(0);
+}
+
+.add-sales-compact-btn .material-icons {
+    font-size: 24px;
+}
+
 /* Add Sales Button */
 .add-sales-btn {
     display: flex;
