@@ -2872,44 +2872,91 @@ input:checked + .toggle-slider:before {
 
 /* Mobile table optimization for preventing column overlap */
 @media (max-width: 480px) {
-    /* Make table scrollable horizontally on mobile */
+    /* Remove horizontal scroll and make table fit screen */
     .inventory-table-wrapper {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        margin: 0 -16px;
-        padding: 0 16px;
-    }
-    
-    .inventory-table {
-        min-width: 600px; /* Ensure minimum width to prevent column overlap */
+        overflow-x: visible;
+        margin: 0;
+        padding: 0;
         width: 100%;
     }
     
-    /* Adjust column widths for Home page on mobile */
+    .inventory-table {
+        min-width: auto;
+        width: 100%;
+        table-layout: auto;
+    }
+    
+    /* Adjust column widths for Home page on mobile - more compact */
     .inventory-table th,
     .inventory-table td {
-        white-space: nowrap;
+        white-space: normal;
         font-size: 11px;
-        padding: 10px 8px; /* Slightly reduced horizontal padding */
+        padding: 8px 4px; /* Reduced padding */
     }
     
-    /* Ensure header text doesn't wrap */
+    /* Ensure header text is compact */
     .inventory-table th {
-        font-size: 10px;
-        letter-spacing: 0.5px;
+        font-size: 8px;
+        letter-spacing: 0;
+        font-weight: 500;
+        text-transform: uppercase;
+        line-height: 1.2;
     }
     
-    /* Home page specific adjustments */
+    /* Home page specific adjustments - compact columns */
     #homePage .inventory-table th:nth-child(1),
-    #homePage .inventory-table td:nth-child(1) { min-width: 120px; } /* Product Model */
+    #homePage .inventory-table td:nth-child(1) { 
+        width: 25%; /* Product Model */
+        min-width: auto;
+        font-size: 10px;
+    }
     #homePage .inventory-table th:nth-child(2),
-    #homePage .inventory-table td:nth-child(2) { min-width: 80px; } /* Stock Qty */
+    #homePage .inventory-table td:nth-child(2) { 
+        width: 15%; /* Stock Qty */
+        min-width: auto;
+        text-align: center;
+    }
     #homePage .inventory-table th:nth-child(3),
-    #homePage .inventory-table td:nth-child(3) { min-width: 80px; } /* Safety Stock */
+    #homePage .inventory-table td:nth-child(3) { 
+        width: 12%; /* Safety Stock - reduced width */
+        min-width: auto;
+        text-align: center;
+        padding: 8px 2px; /* Less horizontal padding */
+    }
     #homePage .inventory-table th:nth-child(4),
-    #homePage .inventory-table td:nth-child(4) { min-width: 80px; } /* Sales */
+    #homePage .inventory-table td:nth-child(4) { 
+        width: 15%; /* Sales */
+        min-width: auto;
+        text-align: center;
+    }
     #homePage .inventory-table th:nth-child(5),
-    #homePage .inventory-table td:nth-child(5) { min-width: 80px; } /* Status */
+    #homePage .inventory-table td:nth-child(5) { 
+        width: 30%; /* Status */
+        min-width: auto;
+    }
+    
+    /* Make status badges more compact on mobile */
+    .status-badge {
+        font-size: 9px;
+        padding: 2px 6px;
+        border-radius: 3px;
+    }
+    
+    /* Further reduce padding for inventory table container */
+    .inventory-table-container {
+        padding: 8px;
+        margin: 0;
+    }
+    
+    /* Reduce page content padding on mobile */
+    .page-content {
+        padding: 12px 8px;
+    }
+    
+    /* Remove extra margins */
+    .page-header {
+        margin-bottom: 12px;
+    }
     
     /* Personal page specific adjustments */
     #personalPage .inventory-table {
