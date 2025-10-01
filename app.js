@@ -43,9 +43,9 @@ document.addEventListener('keydown', function(e) {
 
 // Model list (mutable for adding/removing models)
 let models = [
-    "100Q7800H", "86X8700G", "86X8500G", "75X8700G", "75X8500G",
-    "75Q6600H", "65X8700G", "65X8500G", "65Q6620G", "60Q6600H",
-    "55Q6600H", "43E5520H", "40E5520H", "32E5520H"
+    "32E5520H", "40E5520H", "43E5520H", "55Q6600H",
+    "60Q6600H", "65Q6620G", "65X8500G", "65X8700G",
+    "75X8500G", "75X8700G", "86X8700G", "100Q7800H"
 ];
 
 // Inventory data
@@ -64,6 +64,12 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeInventory();
     initializeProductAttributes();
     loadData();
+    
+    // Initialize with specific inventory data if empty
+    if (Object.keys(inventoryData).every(key => inventoryData[key].stock === 0)) {
+        initializeSpecificInventoryData();
+    }
+    
     loadProductPrices();
     updateSalesColumnHeader();
     renderInventoryTable();
@@ -73,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add test sales data if empty
     if (salesHistory.length === 0) {
-        addTestSalesData();
+        initializeSalesData();
     }
 
     // Add keyboard navigation for date picker
@@ -114,6 +120,108 @@ function handleDateNavigationKeys(e) {
         e.preventDefault();
         navigateDate(1);
     }
+}
+
+// Initialize sales data from the table
+function initializeSalesData() {
+    const salesData = {
+        "32E5520H": { sale9days: 0, saleOther: 1 },
+        "40E5520H": { sale9days: 12, saleOther: 35 },
+        "43E5520H": { sale9days: 7, saleOther: 13 },
+        "55Q6600H": { sale9days: 2, saleOther: 4 },
+        "60Q6600H": { sale9days: 19, saleOther: 35 },
+        "65Q6620G": { sale9days: 2, saleOther: 11 },
+        "65X8500G": { sale9days: 3, saleOther: 6 },
+        "65X8700G": { sale9days: 1, saleOther: 2 },
+        "75X8500G": { sale9days: 1, saleOther: 1 },
+        "75X8700G": { sale9days: 0, saleOther: 0 },
+        "86X8700G": { sale9days: 1, saleOther: 1 },
+        "100Q7800H": { sale9days: 1, saleOther: 1 }
+    };
+    
+    const today = new Date();
+    const testSales = [];
+    
+    // Create sales history for the last 9 days based on the "Sale in 9" column
+    for (let i = 8; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        const dailyItems = [];
+        
+        // Distribute the 9-day sales across the period
+        for (const model in salesData) {
+            if (salesData[model].sale9days > 0) {
+                // Simple distribution: spread sales evenly across 9 days with some variation
+                const avgDailySales = salesData[model].sale9days / 9;
+                let dailyQuantity = 0;
+                
+                if (avgDailySales >= 1) {
+                    dailyQuantity = Math.floor(avgDailySales);
+                    // Add remainder on some days
+                    if (i % 3 === 0 && salesData[model].sale9days % 9 > 0) {
+                        dailyQuantity += 1;
+                    }
+                } else if (avgDailySales > 0) {
+                    // For small quantities, distribute on specific days
+                    if (i % Math.ceil(9 / salesData[model].sale9days) === 0) {
+                        dailyQuantity = 1;
+                    }
+                }
+                
+                if (dailyQuantity > 0) {
+                    dailyItems.push({
+                        model: model,
+                        quantity: dailyQuantity,
+                        price: productPrices[model] || 0,
+                        time: "10:00"
+                    });
+                }
+            }
+        }
+        
+        if (dailyItems.length > 0) {
+            testSales.push({
+                date: dateStr,
+                items: dailyItems
+            });
+        }
+    }
+    
+    // Add today's additional sales from the "Sale in" column
+    const todayItems = [];
+    for (const model in salesData) {
+        if (salesData[model].saleOther > 0) {
+            todayItems.push({
+                model: model,
+                quantity: salesData[model].saleOther,
+                price: productPrices[model] || 0,
+                time: "14:00"
+            });
+        }
+    }
+    
+    if (todayItems.length > 0) {
+        // Check if today already has sales
+        const todayStr = today.toISOString().split('T')[0];
+        const existingToday = testSales.find(sale => sale.date === todayStr);
+        
+        if (existingToday) {
+            // Merge with existing today's sales
+            existingToday.items = existingToday.items.concat(todayItems);
+        } else {
+            // Add new today entry
+            testSales.push({
+                date: todayStr,
+                items: todayItems
+            });
+        }
+    }
+    
+    salesHistory = testSales;
+    saveData();
+    calculateSafetyStock(); // Recalculate safety stock based on new sales data
 }
 
 // Add test sales data for demonstration
@@ -166,6 +274,34 @@ function initializeInventory() {
             };
         }
     });
+}
+
+// Initialize specific inventory data from the table
+function initializeSpecificInventoryData() {
+    const stockData = {
+        "32E5520H": { stock: 28, safetyStock: 10 },
+        "40E5520H": { stock: 14, safetyStock: 10 },
+        "43E5520H": { stock: 4, safetyStock: 10 },
+        "55Q6600H": { stock: 35, safetyStock: 10 },
+        "60Q6600H": { stock: 0, safetyStock: 10 },
+        "65Q6620G": { stock: 3, safetyStock: 10 },
+        "65X8500G": { stock: 11, safetyStock: 10 },
+        "65X8700G": { stock: 3, safetyStock: 10 },
+        "75X8500G": { stock: 2, safetyStock: 10 },
+        "75X8700G": { stock: 4, safetyStock: 10 },
+        "86X8700G": { stock: 4, safetyStock: 10 },
+        "100Q7800H": { stock: 1, safetyStock: 10 }
+    };
+    
+    // Update inventoryData with specific values
+    for (const model in stockData) {
+        if (inventoryData[model]) {
+            inventoryData[model] = stockData[model];
+        }
+    }
+    
+    // Save the initialized data
+    saveData();
 }
 
 // Load data from localStorage
@@ -1010,20 +1146,18 @@ function exportToExcel() {
 // Product prices (in Rand)
 // Product prices (now stored in localStorage for editing)
 let productPrices = {
-    "100Q7800H": 45000,
-    "86X8700G": 35000,
-    "86X8500G": 32000,
-    "75X8700G": 25000,
-    "75X8500G": 22000,
-    "75Q6600H": 20000,
-    "65X8700G": 18000,
-    "65X8500G": 16000,
-    "65Q6620G": 15000,
-    "60Q6600H": 12000,
-    "55Q6600H": 10000,
-    "43E5520H": 7000,
-    "40E5520H": 6000,
-    "32E5520H": 4500
+    "32E5520H": 2799,
+    "40E5520H": 3799,
+    "43E5520H": 4499,
+    "55Q6600H": 6799,
+    "60Q6600H": 6999,
+    "65Q6620G": 8999,
+    "65X8500G": 10999,
+    "65X8700G": 12999,
+    "75X8500G": 15999,
+    "75X8700G": 17999,
+    "86X8700G": 22999,
+    "100Q7800H": 39999
 };
 
 // Load saved prices from localStorage
