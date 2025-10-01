@@ -1093,6 +1093,90 @@ function forceEnglishDateInputs() {
     }
 }
 
+// Export current localStorage data to JSON
+function exportLocalData() {
+    const data = {
+        inventory: localStorage.getItem('makroInventory'),
+        sales: localStorage.getItem('makroSales'),
+        models: localStorage.getItem('makroModels'),
+        prices: localStorage.getItem('makroProductPrices'),
+        attributes: localStorage.getItem('makroProductAttributes'),
+        monthlyTargets: localStorage.getItem('makroMonthlyTargets'),
+        safetyStockDays: localStorage.getItem('makroSafetyStockDays')
+    };
+    
+    // Parse the data for pretty printing
+    const parsedData = {};
+    for (const key in data) {
+        if (data[key]) {
+            try {
+                parsedData[key] = JSON.parse(data[key]);
+            } catch (e) {
+                parsedData[key] = data[key];
+            }
+        }
+    }
+    
+    // Create a blob and download
+    const jsonStr = JSON.stringify(parsedData, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `makro-data-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    console.log('Data exported successfully');
+    return parsedData;
+}
+
+// Import data from JSON file
+function importLocalData(jsonData) {
+    try {
+        if (jsonData.inventory) {
+            localStorage.setItem('makroInventory', JSON.stringify(jsonData.inventory));
+        }
+        if (jsonData.sales) {
+            localStorage.setItem('makroSales', JSON.stringify(jsonData.sales));
+        }
+        if (jsonData.models) {
+            localStorage.setItem('makroModels', JSON.stringify(jsonData.models));
+        }
+        if (jsonData.prices) {
+            localStorage.setItem('makroProductPrices', JSON.stringify(jsonData.prices));
+        }
+        if (jsonData.attributes) {
+            localStorage.setItem('makroProductAttributes', JSON.stringify(jsonData.attributes));
+        }
+        if (jsonData.monthlyTargets) {
+            localStorage.setItem('makroMonthlyTargets', JSON.stringify(jsonData.monthlyTargets));
+        }
+        if (jsonData.safetyStockDays) {
+            localStorage.setItem('makroSafetyStockDays', jsonData.safetyStockDays);
+        }
+        
+        console.log('Data imported successfully');
+        location.reload(); // Reload to apply imported data
+    } catch (error) {
+        console.error('Error importing data:', error);
+        showAlert('Error importing data. Please check the file format.', 'Error', 'error');
+    }
+}
+
+// Load default data from file
+async function loadDefaultData() {
+    try {
+        const response = await fetch('./data/default-data.json');
+        const data = await response.json();
+        importLocalData(data);
+    } catch (error) {
+        console.error('Error loading default data:', error);
+    }
+}
+
 // Export inventory data to Excel
 function exportToExcel() {
     // Prepare data

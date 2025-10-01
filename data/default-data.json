@@ -1,0 +1,667 @@
+{
+  "inventory": {
+    "32E5520H": {
+      "stock": 27,
+      "safetyStock": 0
+    },
+    "40E5520H": {
+      "stock": 0,
+      "safetyStock": 0
+    },
+    "43E5520H": {
+      "stock": 0,
+      "safetyStock": 0
+    },
+    "55Q6600H": {
+      "stock": 29,
+      "safetyStock": 7
+    },
+    "60Q6600H": {
+      "stock": 0,
+      "safetyStock": 0
+    },
+    "65Q6620G": {
+      "stock": 0,
+      "safetyStock": 0
+    },
+    "65X8500G": {
+      "stock": 6,
+      "safetyStock": 11
+    },
+    "65X8700G": {
+      "stock": 0,
+      "safetyStock": 0
+    },
+    "75X8500G": {
+      "stock": 2,
+      "safetyStock": 0
+    },
+    "75X8700G": {
+      "stock": 4,
+      "safetyStock": 11
+    },
+    "86X8700G": {
+      "stock": 3,
+      "safetyStock": 1
+    },
+    "100Q7800H": {
+      "stock": 0,
+      "safetyStock": 100,
+      "customSafetyStock": 100
+    },
+    "50G6600H": {
+      "stock": 0,
+      "safetyStock": 0
+    },
+    "55Q6620G": {
+      "stock": 0,
+      "safetyStock": 0
+    },
+    "86X8500G": {
+      "stock": 0,
+      "safetyStock": 0
+    },
+    "75Q6600H": {
+      "stock": 0,
+      "safetyStock": 0
+    },
+    "50G6400H": {
+      "stock": 0,
+      "safetyStock": 4
+    },
+    "55Q7700": {
+      "stock": 9,
+      "safetyStock": 1
+    }
+  },
+  "sales": [
+    {
+      "date": "2025-09-27",
+      "items": [
+        {
+          "model": "75X8700G",
+          "quantity": 1
+        },
+        {
+          "model": "65X8500G",
+          "quantity": 2
+        },
+        {
+          "model": "55Q6600H",
+          "quantity": 2
+        }
+      ]
+    },
+    {
+      "date": "2025-09-26",
+      "items": [
+        {
+          "model": "75X8700G",
+          "quantity": 2
+        },
+        {
+          "model": "65X8500G",
+          "quantity": 2
+        },
+        {
+          "model": "55Q6600H",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-25",
+      "items": [
+        {
+          "model": "75X8700G",
+          "quantity": 2
+        },
+        {
+          "model": "65X8500G",
+          "quantity": 2
+        },
+        {
+          "model": "55Q6600H",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-24",
+      "items": [
+        {
+          "model": "75X8700G",
+          "quantity": 3
+        },
+        {
+          "model": "65X8500G",
+          "quantity": 2
+        },
+        {
+          "model": "55Q6600H",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-23",
+      "items": [
+        {
+          "model": "75X8700G",
+          "quantity": 3
+        },
+        {
+          "model": "65X8500G",
+          "quantity": 1
+        },
+        {
+          "model": "55Q6600H",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-22",
+      "items": [
+        {
+          "model": "75X8700G",
+          "quantity": 2
+        },
+        {
+          "model": "65X8500G",
+          "quantity": 2
+        },
+        {
+          "model": "55Q6600H",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-08-31",
+      "items": [
+        {
+          "model": "40E5520H",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-08-31",
+      "items": [
+        {
+          "model": "65Q6620G",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-01",
+      "items": [
+        {
+          "model": "40E5520H",
+          "quantity": 1
+        },
+        {
+          "model": "43E5520H",
+          "quantity": 1
+        },
+        {
+          "model": "50G6400H",
+          "quantity": 1
+        },
+        {
+          "model": "65Q6620G",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-02",
+      "items": [
+        {
+          "model": "40E5520H",
+          "quantity": 1
+        },
+        {
+          "model": "65Q6620G",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-03",
+      "items": [
+        {
+          "model": "40E5520H",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-04",
+      "items": [
+        {
+          "model": "40E5520H",
+          "quantity": 1
+        },
+        {
+          "model": "65X8500G",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-04",
+      "items": [
+        {
+          "model": "40E5520H",
+          "quantity": 1
+        },
+        {
+          "model": "65X8500G",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-05",
+      "items": [
+        {
+          "model": "40E5520H",
+          "quantity": 1
+        },
+        {
+          "model": "43E5520H",
+          "quantity": 1
+        },
+        {
+          "model": "50G6400H",
+          "quantity": 1
+        },
+        {
+          "model": "55Q6600H",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-06",
+      "items": [
+        {
+          "model": "32E5520H",
+          "quantity": 1
+        },
+        {
+          "model": "40E5520H",
+          "quantity": 1
+        },
+        {
+          "model": "55Q6600H",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-07",
+      "items": [
+        {
+          "model": "40E5520H",
+          "quantity": 1
+        },
+        {
+          "model": "43E5520H",
+          "quantity": 1
+        },
+        {
+          "model": "50G6400H",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-08",
+      "items": [
+        {
+          "model": "40E5520H",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-09",
+      "items": [
+        {
+          "model": "40E5520H",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-10",
+      "items": [
+        {
+          "model": "40E5520H",
+          "quantity": 1
+        },
+        {
+          "model": "43E5520H",
+          "quantity": 1
+        },
+        {
+          "model": "50G6400H",
+          "quantity": 1
+        },
+        {
+          "model": "55Q7700",
+          "quantity": 1
+        },
+        {
+          "model": "65X8700G",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-11",
+      "items": [
+        {
+          "model": "40E5520H",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-12",
+      "items": [
+        {
+          "model": "40E5520H",
+          "quantity": 1
+        },
+        {
+          "model": "55Q6600H",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-13",
+      "items": [
+        {
+          "model": "65X8700G",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-14",
+      "items": [
+        {
+          "model": "50G6400H",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-15",
+      "items": [
+        {
+          "model": "50G6400H",
+          "quantity": 1
+        },
+        {
+          "model": "55Q7700",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-17",
+      "items": [
+        {
+          "model": "50G6400H",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-18",
+      "items": [
+        {
+          "model": "50G6400H",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-19",
+      "items": [
+        {
+          "model": "50G6400H",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-20",
+      "items": [
+        {
+          "model": "50G6400H",
+          "quantity": 1
+        },
+        {
+          "model": "55Q6600H",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-21",
+      "items": [
+        {
+          "model": "50G6400H",
+          "quantity": 1
+        },
+        {
+          "model": "55Q6600H",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-21",
+      "items": [
+        {
+          "model": "50G6400H",
+          "quantity": 1
+        },
+        {
+          "model": "55Q7700",
+          "quantity": 1
+        },
+        {
+          "model": "65X8500G",
+          "quantity": 1
+        },
+        {
+          "model": "65X8700G",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-23",
+      "items": [
+        {
+          "model": "50G6400H",
+          "quantity": 1
+        },
+        {
+          "model": "65X8500G",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-24",
+      "items": [
+        {
+          "model": "50G6400H",
+          "quantity": 1
+        },
+        {
+          "model": "86X8700G",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-25",
+      "items": [
+        {
+          "model": "50G6400H",
+          "quantity": 1
+        },
+        {
+          "model": "55Q7700",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-26",
+      "items": [
+        {
+          "model": "55Q6600H",
+          "quantity": 1
+        },
+        {
+          "model": "100Q7800H",
+          "quantity": 1
+        },
+        {
+          "model": "65X8500G",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "date": "2025-09-27",
+      "items": [
+        {
+          "model": "50G6400H",
+          "quantity": 1
+        }
+      ]
+    }
+  ],
+  "models": [
+    "100Q7800H",
+    "32E5520H",
+    "40E5520H",
+    "43E5520H",
+    "50G6400H",
+    "55Q6600H",
+    "55Q7700",
+    "60Q6600H",
+    "65Q6620G",
+    "65X8500G",
+    "65X8700G",
+    "75Q6600H",
+    "75X8500G",
+    "75X8700G",
+    "86X8500G",
+    "86X8700G"
+  ],
+  "prices": {
+    "32E5520H": 4500,
+    "40E5520H": 6000,
+    "43E5520H": 7000,
+    "55Q6600H": 10000,
+    "60Q6600H": 12000,
+    "65Q6620G": 15000,
+    "65X8500G": 16000,
+    "65X8700G": 18000,
+    "75X8500G": 22000,
+    "75X8700G": 25000,
+    "86X8700G": 35000,
+    "100Q7800H": 45000,
+    "50G6600H": 5799,
+    "55Q6620G": 7999,
+    "86X8500G": 32000,
+    "75Q6600H": 20000,
+    "50G6400H": 5799,
+    "55Q7700": 0
+  },
+  "attributes": {
+    "100Q7800H": {
+      "status": "usual",
+      "category": "non-push"
+    },
+    "86X8700G": {
+      "status": "usual",
+      "category": "push"
+    },
+    "86X8500G": {
+      "status": "usual",
+      "category": "non-push"
+    },
+    "75X8700G": {
+      "status": "usual",
+      "category": "push"
+    },
+    "75X8500G": {
+      "status": "usual",
+      "category": "non-push"
+    },
+    "75Q6600H": {
+      "status": "usual",
+      "category": "push"
+    },
+    "65X8700G": {
+      "status": "usual",
+      "category": "push"
+    },
+    "65X8500G": {
+      "status": "usual",
+      "category": "non-push"
+    },
+    "65Q6620G": {
+      "status": "usual",
+      "category": "push"
+    },
+    "60Q6600H": {
+      "status": "usual",
+      "category": "non-push"
+    },
+    "55Q6600H": {
+      "status": "usual",
+      "category": "non-push"
+    },
+    "43E5520H": {
+      "status": "usual",
+      "category": "non-push"
+    },
+    "40E5520H": {
+      "status": "usual",
+      "category": "non-push"
+    },
+    "32E5520H": {
+      "status": "usual",
+      "category": "non-push"
+    },
+    "50G6400H": {
+      "status": "usual",
+      "category": "non-push"
+    },
+    "55Q7700": {
+      "status": "usual",
+      "category": "non-push"
+    }
+  },
+  "monthlyTargets": {
+    "revenue": 500000,
+    "totalUnits": 150,
+    "structureUnits": 100
+  }
+}
