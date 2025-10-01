@@ -610,7 +610,17 @@ body {
     }
 
     .items-container {
-        margin-left: 20px;
+        margin-left: 0;
+        margin-right: 0;
+        padding: 0 16px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+    }
+    
+    .item-row {
+        min-width: 320px;
+        flex-shrink: 0;
     }
 
     .add-item-btn {
@@ -619,6 +629,45 @@ body {
 
     .form-input-group {
         margin-left: 20px;
+    }
+    
+    /* Add visual hint for scrollable area */
+    .items-container::-webkit-scrollbar {
+        height: 4px;
+    }
+    
+    .items-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 2px;
+    }
+    
+    .items-container::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 2px;
+    }
+    
+    /* Add shadow to indicate scrollable content */
+    .items-container {
+        position: relative;
+    }
+    
+    .items-container::before {
+        content: '';
+        position: fixed;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 30px;
+        height: 60px;
+        background: linear-gradient(to right, transparent, rgba(0,0,0,0.1));
+        pointer-events: none;
+        z-index: 1;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    
+    .items-container.scrollable::before {
+        opacity: 1;
     }
 }
 
@@ -722,6 +771,10 @@ body {
 .items-container {
     margin-left: 36px;
     margin-bottom: 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    position: relative;
 }
 
 .item-row {
@@ -735,6 +788,7 @@ body {
     border: 1px solid #E5E7EB;
     border-radius: 12px;
     background: var(--white);
+    scroll-snap-align: start;
 }
 
 .item-row:last-child {

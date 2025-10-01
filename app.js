@@ -602,6 +602,9 @@ function switchFormMode(mode) {
         if (document.getElementById('updateItems').children.length === 0) {
             addUpdateItem();
         }
+        
+        // Check scrollable containers after switching
+        setTimeout(checkScrollableContainers, 100);
     } else if (mode === 'sales') {
         updateTab.classList.remove('active');
         salesTab.classList.add('active');
@@ -614,6 +617,9 @@ function switchFormMode(mode) {
         if (document.getElementById('salesItems').children.length === 0) {
             addSalesItem();
         }
+        
+        // Check scrollable containers after switching
+        setTimeout(checkScrollableContainers, 100);
     }
 
     // Ensure custom date pickers are initialized after mode switch
@@ -636,12 +642,15 @@ function addUpdateItem() {
             <option value="__ADD_NEW__" style="font-weight: 600; color: #8B5CF6;">+ Add New Model</option>
         </select>
         <input type="number" class="quantity-input" placeholder="Stock Qty" min="0" required aria-label="Update quantity">
-        <button class="remove-item-btn" onclick="this.parentElement.remove()" aria-label="Remove item">
+        <button class="remove-item-btn" onclick="this.parentElement.remove(); checkScrollableContainers();" aria-label="Remove item">
             <span class="material-icons">close</span>
         </button>
     `;
 
     container.appendChild(itemRow);
+    
+    // Check if container is scrollable
+    checkScrollableContainers();
 }
 
 // Handle model selection including 'Add New Model' option
@@ -805,12 +814,27 @@ function addSalesItem() {
             <option value="__ADD_NEW__" style="font-weight: 600; color: #8B5CF6;">+ Add New Model</option>
         </select>
         <input type="number" class="quantity-input" placeholder="Sales Qty" min="1" required aria-label="Sales quantity">
-        <button class="remove-item-btn" onclick="this.parentElement.remove()" aria-label="Remove item">
+        <button class="remove-item-btn" onclick="this.parentElement.remove(); checkScrollableContainers();" aria-label="Remove item">
             <span class="material-icons">close</span>
         </button>
     `;
 
     container.appendChild(itemRow);
+    
+    // Check if container is scrollable
+    checkScrollableContainers();
+}
+
+// Check if items containers are scrollable and add visual hint
+function checkScrollableContainers() {
+    const containers = document.querySelectorAll('.items-container');
+    containers.forEach(container => {
+        if (container.scrollWidth > container.clientWidth) {
+            container.classList.add('scrollable');
+        } else {
+            container.classList.remove('scrollable');
+        }
+    });
 }
 
 // Submit sales
@@ -2197,6 +2221,46 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    
+    // Enable horizontal scrolling with touch for items containers
+    const itemsContainers = document.querySelectorAll('.items-container');
+    itemsContainers.forEach(container => {
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+        
+        container.addEventListener('touchstart', () => {
+            // Allow natural touch scrolling
+        }, { passive: true });
+        
+        container.addEventListener('mousedown', (e) => {
+            isDown = true;
+            container.classList.add('active');
+            startX = e.pageX - container.offsetLeft;
+            scrollLeft = container.scrollLeft;
+        });
+        
+        container.addEventListener('mouseleave', () => {
+            isDown = false;
+            container.classList.remove('active');
+        });
+        
+        container.addEventListener('mouseup', () => {
+            isDown = false;
+            container.classList.remove('active');
+        });
+        
+        container.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - container.offsetLeft;
+            const walk = (x - startX) * 2;
+            container.scrollLeft = scrollLeft - walk;
+        });
+    });
+    
+    // Check scrollable containers on page load
+    checkScrollableContainers();
 });
 
 // Update Sales View
