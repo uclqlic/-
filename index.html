@@ -19,12 +19,13 @@
 
         <!-- Home主页 -->
         <div id="homePage" class="page active">
-            <!-- 操作按钮区 -->
-            <div class="action-buttons single-button">
-                <button class="action-btn update-btn full-width" onclick="toggleUpdateMode()">
-                    <span class="material-icons">edit_note</span>
-                    <span>Edit</span>
-                    <span class="btn-subtitle">Edit Inventory Number</span>
+            <!-- Page Header with Action -->
+            <div class="page-header-with-action">
+                <div class="page-description">
+                    <p>Update and track your inventory levels</p>
+                </div>
+                <button class="compact-action-btn edit-mode" onclick="toggleUpdateMode()" id="homeEditBtn">
+                    <span class="btn-text">E</span>
                 </button>
             </div>
 
@@ -154,16 +155,12 @@
 
         <!-- Sales页面 -->
         <div id="salesPage" class="page">
-            <!-- Sales Analytics Container -->
-            <div class="inventory-table-container">
-                <div class="table-header">
-                    <h2>Sales Analytics</h2>
-                    <div class="header-actions">
-                        <button class="add-sales-compact-btn" onclick="openSalesFormFromAnalytics()" id="addSalesBtn">
-                            <span class="material-icons">add</span>
-                        </button>
-                    </div>
-                </div>
+            <!-- Sales Analytics Header -->
+            <div class="sales-analytics-header">
+                <h2>Sales Analytics</h2>
+                <button class="add-sales-compact-btn" onclick="openSalesFormFromAnalytics()" id="addSalesBtn">
+                    <span class="material-icons">add</span>
+                </button>
             </div>
             
             <div class="inventory-table-container">
@@ -380,12 +377,13 @@
         <!-- Personal页面 -->
         <div id="personalPage" class="page">
             <div class="personal-page-content">
-                <!-- 操作按钮区 -->
-                <div class="action-buttons single-button">
-                    <button class="action-btn update-btn full-width" onclick="togglePersonalEditMode()">
-                        <span class="material-icons">edit_note</span>
-                        <span>Edit</span>
-                        <span class="btn-subtitle">Edit product information</span>
+                <!-- Page Header with Action -->
+                <div class="page-header-with-action">
+                    <div class="page-description">
+                        <p>Manage product prices and safety stock levels</p>
+                    </div>
+                    <button class="compact-action-btn edit-mode" onclick="togglePersonalEditMode()" id="personalEditBtn">
+                        <span class="btn-text">E</span>
                     </button>
                 </div>
 
@@ -544,6 +542,50 @@
                 <button class="targets-button primary" onclick="saveMonthlyTargets()" type="button">
                     <span class="material-icons">check</span>
                     <span>Save Targets</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Safety Stock Settings Dialog -->
+    <div class="alert-overlay" id="safetyStockDialog" role="dialog" aria-modal="true" aria-labelledby="safety-stock-title">
+        <div class="safety-stock-dialog">
+            <div class="safety-stock-header">
+                <div class="safety-stock-icon">
+                    <span class="material-icons">warning</span>
+                </div>
+                <h3 id="safety-stock-title" class="safety-stock-title">Safety Stock Settings</h3>
+                <p class="safety-stock-subtitle">Configure calculation period for safety stock and sales data</p>
+            </div>
+
+            <div class="safety-stock-content">
+                <div class="safety-stock-form">
+                    <label class="safety-stock-option">
+                        <input type="radio" name="safetyStockMode" value="default" checked>
+                        <span class="option-label">
+                            <span class="option-title">Default (9 days)</span>
+                        </span>
+                    </label>
+
+                    <label class="safety-stock-option custom-option">
+                        <input type="radio" name="safetyStockMode" value="custom">
+                        <span class="option-label">
+                            <span class="option-title">Custom</span>
+                        </span>
+                    </label>
+
+                    <div class="custom-input-container" id="customInputContainer" style="display: none;">
+                        <input type="number" id="customSafetyStock" class="custom-input" placeholder="Enter safety stock" min="0" step="1">
+                    </div>
+                </div>
+            </div>
+
+            <div class="safety-stock-actions">
+                <button class="safety-stock-btn secondary" onclick="closeSafetyStockDialog()" type="button">
+                    <span>Cancel</span>
+                </button>
+                <button class="safety-stock-btn primary" onclick="saveSafetyStock()" type="button">
+                    <span>Save</span>
                 </button>
             </div>
         </div>

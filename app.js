@@ -208,18 +208,25 @@ function calculateSafetyStock() {
     const daysAgo = new Date();
     daysAgo.setDate(today.getDate() - safetyStockDays);
 
-    // Reset safety stock
+    // Calculate safety stock for each model
     models.forEach(model => {
-        inventoryData[model].safetyStock = 0;
-    });
-
-    // Calculate sum of sales within specified days
-    salesHistory.forEach(sale => {
-        const saleDate = new Date(sale.date);
-        if (saleDate >= daysAgo && saleDate <= today) {
-            sale.items.forEach(item => {
-                if (inventoryData[item.model]) {
-                    inventoryData[item.model].safetyStock += item.quantity;
+        // Check if model has custom safety stock
+        if (inventoryData[model].customSafetyStock !== undefined && inventoryData[model].customSafetyStock !== null) {
+            // Use custom value
+            inventoryData[model].safetyStock = inventoryData[model].customSafetyStock;
+        } else {
+            // Calculate based on 9-day sales (default)
+            inventoryData[model].safetyStock = 0;
+            
+            // Calculate sum of sales within specified days
+            salesHistory.forEach(sale => {
+                const saleDate = new Date(sale.date);
+                if (saleDate >= daysAgo && saleDate <= today) {
+                    sale.items.forEach(item => {
+                        if (item.model === model) {
+                            inventoryData[model].safetyStock += item.quantity;
+                        }
+                    });
                 }
             });
         }
@@ -335,36 +342,20 @@ function renderInventoryTable() {
         tbody.appendChild(row);
     });
 
-    // Add new row button in edit mode
-    if (isEditMode) {
-        const addRow = document.createElement('tr');
-        addRow.className = 'add-row';
-        addRow.innerHTML = `
-            <td colspan="5" style="text-align: center; padding: 12px;">
-                <button class="add-row-btn" onclick="showAddRowDialog()">
-                    <span class="material-icons">add</span>
-                    <span>Add New Model</span>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(addRow);
-    }
+    // Removed Add New Model button for Home page as per user request
 }
 
 // Toggle edit mode
 function toggleUpdateMode() {
     isEditMode = !isEditMode;
-    const btn = document.querySelector('#homePage .update-btn');
-    const thead = document.querySelector('.inventory-table thead tr');
+    const btn = document.getElementById('homeEditBtn');
+    const thead = document.querySelector('#homePage .inventory-table thead tr');
 
     if (isEditMode) {
-        btn.classList.add('active');
-        // Update button text to Save
-        btn.innerHTML = `
-            <span class="material-icons">save</span>
-            <span>Save</span>
-            <span class="btn-subtitle">Save changes</span>
-        `;
+        btn.classList.remove('edit-mode');
+        btn.classList.add('save-mode');
+        // Update button to show checkmark
+        btn.innerHTML = '<span class="material-icons">check</span>';
         
         // Add action column header
         if (!document.getElementById('action-header')) {
@@ -375,13 +366,10 @@ function toggleUpdateMode() {
         }
         renderInventoryTable();
     } else {
-        btn.classList.remove('active');
-        // Update button text back to Edit
-        btn.innerHTML = `
-            <span class="material-icons">edit_note</span>
-            <span>Edit</span>
-            <span class="btn-subtitle">Edit Inventory Number</span>
-        `;
+        btn.classList.remove('save-mode');
+        btn.classList.add('edit-mode');
+        // Update button to show E
+        btn.innerHTML = '<span class="btn-text">E</span>';
         
         // Remove action column header
         const actionHeader = document.getElementById('action-header');
@@ -1878,8 +1866,6 @@ function renderPersonalTable() {
     models.forEach(model => {
         const attrs = productAttributes[model] || { status: 'usual', category: 'non-push' };
         const price = productPrices[model] || 0;
-        const stock = inventoryData[model]?.quantity || 0;
-        const safetyStock = inventoryData[model]?.safetyStock || 20;
 
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -1892,7 +1878,11 @@ function renderPersonalTable() {
                     <span class="material-icons">visibility</span>
                 </button>
             </td>
-            <td class="editable-safety" data-model="${model}">${safetyStock}</td>
+            <td>
+                <button class="view-safety-btn" onclick="openSafetyStockSettings('${model}')" title="Configure safety stock">
+                    <span class="material-icons">visibility</span>
+                </button>
+            </td>
         `;
 
         tbody.appendChild(row);
@@ -1903,45 +1893,27 @@ function renderPersonalTable() {
 let personalEditMode = false;
 function togglePersonalEditMode() {
     personalEditMode = !personalEditMode;
-    const editBtn = document.querySelector('#personalPage .update-btn');
+    const editBtn = document.getElementById('personalEditBtn');
     
     if (personalEditMode) {
         // Enter edit mode
-        editBtn.innerHTML = `
-            <span class="material-icons">save</span>
-            <span>Save</span>
-            <span class="btn-subtitle">Save changes</span>
-        `;
+        editBtn.classList.remove('edit-mode');
+        editBtn.classList.add('save-mode');
+        editBtn.innerHTML = '<span class="material-icons">check</span>';
         
         // Make cells editable
         makePersonalTableEditable();
         
-        // Add add button
-        const tbody = document.getElementById('personalTableBody');
-        const addRow = document.createElement('tr');
-        addRow.id = 'addNewModelRow';
-        addRow.innerHTML = `
-            <td colspan="7" style="text-align: center;">
-                <button class="add-model-btn" onclick="addNewModelFromTable()" style="width: auto; padding: 8px 16px;">
-                    <span class="material-icons">add</span>
-                    <span>Add New Model</span>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(addRow);
+        // Removed Add New Model button for Personal page as per user request
     } else {
         // Exit edit mode - save changes
         savePersonalChanges();
         
-        editBtn.innerHTML = `
-            <span class="material-icons">edit_note</span>
-            <span>Edit</span>
-            <span class="btn-subtitle">Edit product information</span>
-        `;
+        editBtn.classList.remove('save-mode');
+        editBtn.classList.add('edit-mode');
+        editBtn.innerHTML = '<span class="btn-text">E</span>';
         
-        // Remove add button row
-        const addRow = document.getElementById('addNewModelRow');
-        if (addRow) addRow.remove();
+        // No need to remove add button row as it's no longer added
         
         // Remove Actions header
         const actionsHeader = document.querySelector('#personalTableBody').closest('table').querySelector('th.actions-header');
@@ -2005,12 +1977,7 @@ function makePersonalTableEditable() {
         `;
     });
     
-    // Make safety stock cells editable
-    document.querySelectorAll('.editable-safety').forEach(cell => {
-        const model = cell.dataset.model;
-        const value = cell.textContent;
-        cell.innerHTML = `<input type="number" value="${value}" class="inline-edit" data-model="${model}" data-field="safety" min="0" step="1">`;
-    });
+    // Safety stock is now managed through the eye icon dialog, not inline editing
     
     // Add delete buttons as new column
     document.querySelectorAll('#personalTableBody tr').forEach(row => {
@@ -2052,15 +2019,7 @@ function savePersonalChanges() {
         productAttributes[model].category = input.checked ? 'push' : 'non-push';
     });
     
-    // Save safety stock changes
-    document.querySelectorAll('input[data-field="safety"]').forEach(input => {
-        const model = input.dataset.model;
-        const value = parseInt(input.value) || 20;
-        if (!inventoryData[model]) {
-            inventoryData[model] = { quantity: 0, safetyStock: 20 };
-        }
-        inventoryData[model].safetyStock = value;
-    });
+    // Safety stock is now managed through the dialog, not inline editing
     
     // Save all data to localStorage
     saveProductPrices();
@@ -2130,19 +2089,7 @@ function addNewModelFromTable() {
     renderPersonalTable();
     makePersonalTableEditable();
     
-    // Re-add the add button row
-    const tbody = document.getElementById('personalTableBody');
-    const addRow = document.createElement('tr');
-    addRow.id = 'addNewModelRow';
-    addRow.innerHTML = `
-        <td colspan="7" style="text-align: center;">
-            <button class="add-model-btn" onclick="addNewModelFromTable()" style="width: auto; padding: 8px 16px;">
-                <span class="material-icons">add</span>
-                <span>Add New Model</span>
-            </button>
-        </td>
-    `;
-    tbody.appendChild(addRow);
+    // Removed re-adding of Add New Model button as per user request
 }
 
 // View Model Sales (眼睛按钮功能)
@@ -2175,6 +2122,82 @@ function viewModelSales(model) {
     
     document.body.appendChild(dialog);
 }
+
+// Safety Stock Settings
+let currentSafetyStockModel = null;
+
+function openSafetyStockSettings(model) {
+    currentSafetyStockModel = model;
+    const dialog = document.getElementById('safetyStockDialog');
+    
+    // Get current safety stock mode for this model
+    const modelSafetyStock = inventoryData[model]?.customSafetyStock;
+    const isCustom = modelSafetyStock !== undefined && modelSafetyStock !== null;
+    
+    // Set radio button
+    const defaultRadio = dialog.querySelector('input[value="default"]');
+    const customRadio = dialog.querySelector('input[value="custom"]');
+    const customInput = document.getElementById('customSafetyStock');
+    const customContainer = document.getElementById('customInputContainer');
+    
+    if (isCustom) {
+        customRadio.checked = true;
+        customInput.value = modelSafetyStock;
+        customContainer.style.display = 'block';
+    } else {
+        defaultRadio.checked = true;
+        customInput.value = '';
+        customContainer.style.display = 'none';
+    }
+    
+    dialog.classList.add('show');
+}
+
+function closeSafetyStockDialog() {
+    const dialog = document.getElementById('safetyStockDialog');
+    dialog.classList.remove('show');
+    currentSafetyStockModel = null;
+}
+
+function saveSafetyStock() {
+    if (!currentSafetyStockModel) return;
+    
+    const dialog = document.getElementById('safetyStockDialog');
+    const selectedMode = dialog.querySelector('input[name="safetyStockMode"]:checked').value;
+    
+    if (selectedMode === 'custom') {
+        const customValue = parseInt(document.getElementById('customSafetyStock').value) || 0;
+        inventoryData[currentSafetyStockModel].customSafetyStock = customValue;
+        inventoryData[currentSafetyStockModel].safetyStock = customValue;
+    } else {
+        // Default mode - calculate based on 9-day sales
+        const salesIn9Days = getSalesForPeriod(currentSafetyStockModel, 9);
+        inventoryData[currentSafetyStockModel].safetyStock = salesIn9Days;
+        delete inventoryData[currentSafetyStockModel].customSafetyStock;
+    }
+    
+    saveData();
+    closeSafetyStockDialog();
+    
+    // Show success message
+    showAlert('Success', 'Safety stock settings have been updated.');
+}
+
+// Add event listeners for radio buttons
+document.addEventListener('DOMContentLoaded', function() {
+    const safetyStockRadios = document.querySelectorAll('input[name="safetyStockMode"]');
+    const customContainer = document.getElementById('customInputContainer');
+    
+    safetyStockRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customContainer.style.display = 'block';
+            } else {
+                customContainer.style.display = 'none';
+            }
+        });
+    });
+});
 
 // Update Sales View
 function updateSalesView(btn, model, days) {
