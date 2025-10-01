@@ -78,7 +78,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add keyboard navigation for date picker
     document.addEventListener('keydown', handleDateNavigationKeys);
+    
+    // Handle horizontal scroll indication for tables
+    checkTableScroll();
+    window.addEventListener('resize', checkTableScroll);
 });
+
+// Check if table needs horizontal scroll
+function checkTableScroll() {
+    const tableWrappers = document.querySelectorAll('.inventory-table-wrapper');
+    tableWrappers.forEach(wrapper => {
+        if (wrapper.scrollWidth > wrapper.clientWidth) {
+            wrapper.classList.add('scrollable');
+        } else {
+            wrapper.classList.remove('scrollable');
+        }
+    });
+}
 
 // Handle keyboard navigation for date picker
 function handleDateNavigationKeys(e) {
@@ -1117,6 +1133,9 @@ function showPage(page) {
 
         // Load personal page data
         loadPersonalPage();
+        
+        // Check table scroll on page change
+        setTimeout(checkTableScroll, 100);
     }
 }
 

@@ -2607,10 +2607,103 @@ input:checked + .toggle-slider:before {
     border-radius: 50%;
 }
 
+/* Mobile table optimization for preventing column overlap */
+@media (max-width: 480px) {
+    /* Make table scrollable horizontally on mobile */
+    .inventory-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -16px;
+        padding: 0 16px;
+    }
+    
+    .inventory-table {
+        min-width: 600px; /* Ensure minimum width to prevent column overlap */
+        width: 100%;
+    }
+    
+    /* Adjust column widths for Home page on mobile */
+    .inventory-table th,
+    .inventory-table td {
+        white-space: nowrap;
+        font-size: 11px;
+        padding: 10px 8px; /* Slightly reduced horizontal padding */
+    }
+    
+    /* Ensure header text doesn't wrap */
+    .inventory-table th {
+        font-size: 10px;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Home page specific adjustments */
+    #homePage .inventory-table th:nth-child(1),
+    #homePage .inventory-table td:nth-child(1) { min-width: 120px; } /* Product Model */
+    #homePage .inventory-table th:nth-child(2),
+    #homePage .inventory-table td:nth-child(2) { min-width: 80px; } /* Stock Qty */
+    #homePage .inventory-table th:nth-child(3),
+    #homePage .inventory-table td:nth-child(3) { min-width: 80px; } /* Safety Stock */
+    #homePage .inventory-table th:nth-child(4),
+    #homePage .inventory-table td:nth-child(4) { min-width: 80px; } /* Sales */
+    #homePage .inventory-table th:nth-child(5),
+    #homePage .inventory-table td:nth-child(5) { min-width: 80px; } /* Status */
+    
+    /* Personal page specific adjustments */
+    #personalPage .inventory-table {
+        min-width: 700px; /* Wider for more columns */
+    }
+    
+    #personalPage .inventory-table th:nth-child(1),
+    #personalPage .inventory-table td:nth-child(1) { min-width: 100px; } /* Model */
+    #personalPage .inventory-table th:nth-child(2),
+    #personalPage .inventory-table td:nth-child(2) { min-width: 70px; } /* Price */
+    #personalPage .inventory-table th:nth-child(3),
+    #personalPage .inventory-table td:nth-child(3) { min-width: 70px; } /* Status */
+    #personalPage .inventory-table th:nth-child(4),
+    #personalPage .inventory-table td:nth-child(4) { min-width: 80px; } /* Category */
+    #personalPage .inventory-table th:nth-child(5),
+    #personalPage .inventory-table td:nth-child(5) { min-width: 60px; } /* Sales */
+    #personalPage .inventory-table th:nth-child(6),
+    #personalPage .inventory-table td:nth-child(6) { min-width: 80px; } /* Safety Stock */
+    
+    /* Add horizontal scroll indicator */
+    .inventory-table-wrapper::-webkit-scrollbar {
+        height: 6px;
+    }
+    
+    .inventory-table-wrapper::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    
+    .inventory-table-wrapper::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+    
+    /* Visual hint for scrollable area */
+    .inventory-table-wrapper::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 30px;
+        background: linear-gradient(to right, transparent, rgba(255,255,255,0.8));
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    
+    .inventory-table-wrapper.scrollable::after {
+        opacity: 1;
+    }
+}
+
 /* Small screen optimization - Card layout */
 @media (max-width: 375px) {
+    /* Keep table but make it scrollable rather than hiding */
     .inventory-table {
-        display: none;
+        font-size: 10px;
     }
 
     .inventory-cards {
