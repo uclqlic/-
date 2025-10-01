@@ -60,15 +60,54 @@ let monthlyTargets = {
 }; // Default monthly targets
 
 // Initialize
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Check if localStorage is empty or needs initialization
+    const hasData = localStorage.getItem('makroInventory') || 
+                   localStorage.getItem('makroSales') || 
+                   localStorage.getItem('makroModels');
+    
+    if (!hasData) {
+        // Load default data from file if localStorage is empty
+        console.log('No local data found, loading default data...');
+        try {
+            const response = await fetch('./data/default-data.json');
+            if (response.ok) {
+                const defaultData = await response.json();
+                
+                // Import all data from the file
+                if (defaultData.inventory) {
+                    localStorage.setItem('makroInventory', JSON.stringify(defaultData.inventory));
+                }
+                if (defaultData.sales) {
+                    localStorage.setItem('makroSales', JSON.stringify(defaultData.sales));
+                }
+                if (defaultData.models) {
+                    localStorage.setItem('makroModels', JSON.stringify(defaultData.models));
+                }
+                if (defaultData.prices) {
+                    localStorage.setItem('makroProductPrices', JSON.stringify(defaultData.prices));
+                }
+                if (defaultData.attributes) {
+                    localStorage.setItem('makroProductAttributes', JSON.stringify(defaultData.attributes));
+                }
+                if (defaultData.monthlyTargets) {
+                    localStorage.setItem('makroMonthlyTargets', JSON.stringify(defaultData.monthlyTargets));
+                }
+                if (defaultData.safetyStockDays) {
+                    localStorage.setItem('makroSafetyStockDays', defaultData.safetyStockDays);
+                }
+                
+                console.log('Default data loaded successfully');
+            }
+        } catch (error) {
+            console.error('Error loading default data:', error);
+        }
+    }
+    
+    // Continue with normal initialization
     initializeInventory();
     initializeProductAttributes();
     loadData();
-    
-    // Initialize with specific inventory data if empty
-    if (Object.keys(inventoryData).every(key => inventoryData[key].stock === 0)) {
-        initializeSpecificInventoryData();
-    }
     
     loadProductPrices();
     updateSalesColumnHeader();
@@ -76,11 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initCustomDatePickers();
     setDefaultDatesCustom();
     forceEnglishDateInputs();
-
-    // Add test sales data if empty
-    if (salesHistory.length === 0) {
-        initializeSalesData();
-    }
 
     // Add keyboard navigation for date picker
     document.addEventListener('keydown', handleDateNavigationKeys);
